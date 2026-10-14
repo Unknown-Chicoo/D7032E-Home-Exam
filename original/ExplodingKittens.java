@@ -208,7 +208,7 @@ public class ExplodingKittens {
 						if(count>=2)
 							yourOptions += "\tTwo " + card + " [target] (available targets: " + otherPlayerIDs + ") (Steal random card)\n";
 						if(count>=3)
-							yourOptions += "\tThree " + card + " [target] [Card Type] (available targets: " + otherPlayerIDs + ") (Name and pick a card)\n";
+							yourOptions += "\tThree " + card + " [target] [main.core.model.Card Type] (available targets: " + otherPlayerIDs + ") (Name and pick a card)\n";
 						if(card == Card.Attack)
 							yourOptions += "\tAttack\n";
 						if(card == Card.Favor)
