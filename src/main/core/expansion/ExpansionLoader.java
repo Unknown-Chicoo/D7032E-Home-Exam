@@ -1,16 +1,21 @@
 package main.core.expansion;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.ServiceLoader;
 
-/** Discovers installed expansions through {@link java.util.ServiceLoader}. */
+/** Discovers installed expansions through {@link java.util.ServiceLoader} (Plugin), sorted by {@link Expansion#order()}. */
 public final class ExpansionLoader {
 
     public List<Expansion> available() {
-        throw new UnsupportedOperationException("TODO: ServiceLoader.load(Expansion.class)");
+        return ServiceLoader.load(Expansion.class).stream()
+                .map(ServiceLoader.Provider::get)
+                .sorted(Comparator.comparingInt(Expansion::order))
+                .toList();
     }
 
     public Optional<Expansion> byName(String name) {
-        throw new UnsupportedOperationException("TODO: find an available expansion by name");
+        return available().stream().filter(e -> e.name().equalsIgnoreCase(name)).findFirst();
     }
 }

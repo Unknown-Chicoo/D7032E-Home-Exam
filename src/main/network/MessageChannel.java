@@ -1,16 +1,18 @@
 package main.network;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 
-/** A two-way connection that carries {@link Message}s. */
-// TODO(design): decide how I/O failures surface (checked IOException vs. UncheckedIOException),
-//  and whether close() should narrow AutoCloseable's "throws Exception".
+/** A two-way connection that carries {@link Message}s; failures surface as checked {@link IOException}. */
 public interface MessageChannel extends AutoCloseable {
-    void send(Message message);
+    void send(Message message) throws IOException;
 
-    Message receive();
+    Message receive() throws IOException;
 
     /** Waits at most {@code timeout}; used for the Nope window (Req. 20). */
-    Optional<Message> receive(Duration timeout);
+    Optional<Message> receive(Duration timeout) throws IOException;
+
+    @Override
+    void close() throws IOException;
 }

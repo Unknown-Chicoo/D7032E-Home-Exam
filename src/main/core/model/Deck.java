@@ -6,7 +6,7 @@ import java.util.List;
 
 import main.core.util.Randomizer;
 
-/** The draw pile; index 0 is the top. */
+/** The draw pile; index 0 is the top. Offers draw, insert, peek and shuffle so effects never touch the list. */
 public final class Deck {
     private final List<Card> cards;
 
@@ -14,31 +14,37 @@ public final class Deck {
         this.cards = new ArrayList<>();
     }
 
+    /** Removes and returns the top card (rule 10); the deck is never empty while kittens remain. */
     public Card drawTop() {
-        throw new UnsupportedOperationException("TODO: remove and return the top card (rule 10)");
+        if (cards.isEmpty()) {
+            throw new IllegalStateException("The deck is empty");
+        }
+        return cards.remove(0);
     }
 
+    /** Inserts at {@code position}, where 0 is the top and {@link #size()} the bottom (rule 10, Defuse). */
     public void insertAt(int position, Card card) {
-        throw new UnsupportedOperationException("TODO: insert a card at a position (Defuse)");
+        cards.add(position, card);
     }
 
+    /** The top {@code n} cards (fewer if the deck is smaller), top first, without removing them. */
     public List<Card> peek(int n) {
-        throw new UnsupportedOperationException("TODO: return the top n cards without removing them");
+        return List.copyOf(cards.subList(0, Math.min(n, cards.size())));
     }
 
     public void shuffle(Randomizer random) {
-        throw new UnsupportedOperationException("TODO: shuffle the deck");
+        random.shuffle(cards);
     }
 
     public void addAll(Collection<Card> newCards) {
-        throw new UnsupportedOperationException("TODO: add cards to the deck");
+        cards.addAll(newCards);
     }
 
     public int size() {
-        throw new UnsupportedOperationException("TODO: number of cards in the deck");
+        return cards.size();
     }
 
     public boolean isEmpty() {
-        throw new UnsupportedOperationException("TODO: whether the deck is empty");
+        return cards.isEmpty();
     }
 }

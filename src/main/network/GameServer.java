@@ -1,5 +1,8 @@
 package main.network;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Listens on a port and accepts the remote players' connections (Req. 17). */
@@ -10,7 +13,14 @@ public final class GameServer {
         this.port = port;
     }
 
-    public List<MessageChannel> acceptClients(int count) {
-        throw new UnsupportedOperationException("TODO: accept count clients and wrap them in channels");
+    /** Blocks until {@code count} clients have connected. */
+    public List<MessageChannel> acceptClients(int count) throws IOException {
+        List<MessageChannel> channels = new ArrayList<>();
+        try (ServerSocket server = new ServerSocket(port)) {
+            while (channels.size() < count) {
+                channels.add(new SocketChannel(server.accept()));
+            }
+        }
+        return channels;
     }
 }

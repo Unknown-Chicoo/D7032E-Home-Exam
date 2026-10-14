@@ -9,8 +9,6 @@ import main.core.players.PlayerController;
 import main.core.util.Randomizer;
 
 /** Everything a card effect may touch; effects see only this, never the engine (Dependency Inversion). */
-// TODO(design): Skip and Attack end the turn without a draw; decide how the engine learns that an
-//  effect ended the turn (e.g. compare TurnState before/after, or a flag exposed here).
 public interface GameContext {
     GameState state();
 

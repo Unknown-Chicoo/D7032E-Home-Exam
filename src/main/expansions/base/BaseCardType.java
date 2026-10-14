@@ -15,13 +15,13 @@ public enum BaseCardType implements CardType {
     TACOCAT,
     HAIRY_POTATO_CAT,
     CATTERMELON,
-    BEARD_CAT,
+    OVERWEIGHT_BIKINI_CAT,
     RAINBOW_RALPHING_CAT;
 
     @Override
     public boolean isCat() {
         return switch (this) {
-            case TACOCAT, HAIRY_POTATO_CAT, CATTERMELON, BEARD_CAT, RAINBOW_RALPHING_CAT -> true;
+            case TACOCAT, HAIRY_POTATO_CAT, CATTERMELON, OVERWEIGHT_BIKINI_CAT, RAINBOW_RALPHING_CAT -> true;
             default -> false;
         };
     }

@@ -24,6 +24,6 @@ public final class Player {
     }
 
     public void eliminate() {
-        throw new UnsupportedOperationException("TODO: mark the player as out of the game");
+        alive = false;
     }
 }

@@ -12,10 +12,13 @@ public final class ConsoleOutput {
     }
 
     public void println(String text) {
-        throw new UnsupportedOperationException("TODO: print a line");
+        out.println(text);
     }
 
+    /** Prints the options numbered from 0, the number the player then types. */
     public void showOptions(List<String> options) {
-        throw new UnsupportedOperationException("TODO: print numbered options");
+        for (int i = 0; i < options.size(); i++) {
+            out.println("  [" + i + "] " + options.get(i));
+        }
     }
 }

@@ -1,19 +1,33 @@
 package main.expansions.base.effects;
 
+import java.util.List;
+
 import main.core.cards.CardEffect;
 import main.core.cards.GameContext;
 import main.core.cards.InvalidMoveException;
+import main.core.model.Card;
 import main.core.model.Play;
+import main.core.model.Player;
 
-/** Two of a kind: steal a random card from the target. */
+/** Two of a kind: steal a random card from the target (rule 11f). */
 public final class TwoOfAKindEffect implements CardEffect {
 
     @Override
-    public void validate(GameContext ctx, Play play) throws InvalidMoveException {
-        throw new UnsupportedOperationException("TODO: require two matching cards and a target");
+    public Play prepare(GameContext ctx, Play play) {
+        return Targeting.withTarget(ctx, play);
     }
+
+    @Override
+    public void validate(GameContext ctx, Play play) throws InvalidMoveException {
+        Targeting.requireTarget(ctx, play);
+    }
+
     @Override
     public void apply(GameContext ctx, Play play) {
-        throw new UnsupportedOperationException("TODO: steal a random card from the target");
+        Player target = play.target().orElseThrow();
+        List<Card> hand = target.hand().cards();
+        if (!hand.isEmpty()) {
+            ctx.transfer(hand.get(ctx.random().nextInt(hand.size())), target, play.player());
+        }
     }
 }

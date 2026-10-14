@@ -1,19 +1,35 @@
 package main.expansions.base.effects;
 
+import java.util.List;
+
 import main.core.cards.CardEffect;
 import main.core.cards.GameContext;
 import main.core.cards.InvalidMoveException;
+import main.core.model.Card;
 import main.core.model.Play;
+import main.core.model.Player;
 
-/** Favor: the target gives the player a card of the target's choice. */
+/** Favor: the target gives the player one card of the target's choice (rule 11b). */
 public final class FavorEffect implements CardEffect {
 
     @Override
-    public void validate(GameContext ctx, Play play) throws InvalidMoveException {
-        throw new UnsupportedOperationException("TODO: require a living target other than the player");
+    public Play prepare(GameContext ctx, Play play) {
+        return Targeting.withTarget(ctx, play);
     }
+
+    @Override
+    public void validate(GameContext ctx, Play play) throws InvalidMoveException {
+        Targeting.requireTarget(ctx, play);
+    }
+
     @Override
     public void apply(GameContext ctx, Play play) {
-        throw new UnsupportedOperationException("TODO: target chooses a card to give the player");
+        Player target = play.target().orElseThrow();
+        List<Card> hand = target.hand().cards();
+        if (hand.isEmpty()) {
+            return;
+        }
+        Card card = ctx.controllerOf(target).chooseCardToGive(ctx.viewFor(target), play.player());
+        ctx.transfer(hand.contains(card) ? card : hand.get(0), target, play.player());
     }
 }

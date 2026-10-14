@@ -2,6 +2,7 @@ package main.core.events;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import main.core.model.Card;
 import main.core.model.Play;
@@ -18,27 +19,55 @@ public interface GameEvent {
         return Optional.empty();
     }
 
+    private static String names(List<Card> cards) {
+        return cards.stream().map(card -> card.type().name()).collect(Collectors.joining(" + "));
+    }
+
     /** A player's turn began. */
     record TurnStarted(Player player, int turnsLeft) implements GameEvent {
         @Override
         public String describe() {
-            throw new UnsupportedOperationException("TODO: describe TurnStarted");
+            String owed = turnsLeft > 1 ? " (" + turnsLeft + " turns left)" : "";
+            return "--- " + player.name() + "'s turn" + owed + " ---";
         }
     }
 
-    /** A player played one or more cards. */
-    record CardPlayed(Player player, List<Card> cards) implements GameEvent {
+    /** A player played one card or a combo, announced with its target and named type (rule 11). */
+    record CardPlayed(Play play) implements GameEvent {
         @Override
         public String describe() {
-            throw new UnsupportedOperationException("TODO: describe CardPlayed");
+            return play.player().name() + " played " + names(play.cards())
+                    + play.target().map(t -> " on " + t.name()).orElse("")
+                    + play.namedType().map(t -> ", asking for " + t.name()).orElse("");
         }
     }
 
-    /** A play was cancelled by a Nope (rule 12). */
+    /** A play was rejected; only the player who tried it is told why. */
+    record MoveRejected(Player player, String reason) implements GameEvent {
+        @Override
+        public String describe() {
+            return "Not allowed: " + reason;
+        }
+
+        @Override
+        public Optional<Player> privateTo() {
+            return Optional.of(player);
+        }
+    }
+
+    /** A Nope was played against a play; a Nope on a Nope flips it back (rule 12). */
     record PlayNoped(Player by, Play play) implements GameEvent {
         @Override
         public String describe() {
-            throw new UnsupportedOperationException("TODO: describe PlayNoped");
+            return by.name() + " played NOPE against " + play.player().name() + "'s " + names(play.cards());
+        }
+    }
+
+    /** A player drew a card into their hand; the table sees that, but not which card. */
+    record PlayerDrew(Player player) implements GameEvent {
+        @Override
+        public String describe() {
+            return player.name() + " drew a card";
         }
     }
 
@@ -46,7 +75,7 @@ public interface GameEvent {
     record CardDrawn(Player player, Card card) implements GameEvent {
         @Override
         public String describe() {
-            throw new UnsupportedOperationException("TODO: describe CardDrawn");
+            return "You drew " + card.type().name();
         }
 
         @Override
@@ -55,19 +84,19 @@ public interface GameEvent {
         }
     }
 
-    /** A card moved from one hand to another (Favor, combos). */
+    /** A card moved from one hand to another (Favor, combos); which card stays hidden from the table. */
     record CardTransferred(Player from, Player to, Card card) implements GameEvent {
         @Override
         public String describe() {
-            throw new UnsupportedOperationException("TODO: describe CardTransferred");
+            return from.name() + " gave a card to " + to.name();
         }
     }
 
-    /** A player looked at the top of the deck; only they see the cards. */
+    /** A player looked at the top of the deck; only they see the cards (rule 11e). */
     record FutureSeen(Player player, List<Card> top) implements GameEvent {
         @Override
         public String describe() {
-            throw new UnsupportedOperationException("TODO: describe FutureSeen");
+            return "Top of the deck: " + (top.isEmpty() ? "(empty)" : names(top));
         }
 
         @Override
@@ -76,27 +105,27 @@ public interface GameEvent {
         }
     }
 
-    /** The deck was shuffled. */
+    /** The deck was shuffled (rule 11c). */
     record DeckShuffled() implements GameEvent {
         @Override
         public String describe() {
-            throw new UnsupportedOperationException("TODO: describe DeckShuffled");
+            return "The deck was shuffled";
         }
     }
 
-    /** A player defused an Exploding Kitten. */
+    /** A player defused an Exploding Kitten and put it back (rule 10). */
     record KittenDefused(Player player) implements GameEvent {
         @Override
         public String describe() {
-            throw new UnsupportedOperationException("TODO: describe KittenDefused");
+            return player.name() + " drew an Exploding Kitten, defused it and put it back in the deck";
         }
     }
 
-    /** A player exploded and is out. */
+    /** A player exploded and is out (rule 10). */
     record PlayerExploded(Player player) implements GameEvent {
         @Override
         public String describe() {
-            throw new UnsupportedOperationException("TODO: describe PlayerExploded");
+            return player.name() + " drew an Exploding Kitten and EXPLODED!";
         }
     }
 
@@ -104,7 +133,7 @@ public interface GameEvent {
     record GameWon(Player winner) implements GameEvent {
         @Override
         public String describe() {
-            throw new UnsupportedOperationException("TODO: describe GameWon");
+            return winner.name() + " is the last player alive and wins the game!";
         }
     }
 }

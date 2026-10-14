@@ -11,7 +11,7 @@ public final class GameState {
     private final TurnState turns;
 
     public GameState(List<Player> players, Deck deck, DiscardPile discard, TurnState turns) {
-        this.players = players;
+        this.players = List.copyOf(players);
         this.deck = deck;
         this.discard = discard;
         this.turns = turns;
@@ -34,10 +34,12 @@ public final class GameState {
     }
 
     public List<Player> alivePlayers() {
-        throw new UnsupportedOperationException("TODO: players still in the game");
+        return players.stream().filter(Player::isAlive).toList();
     }
 
+    /** The last player alive, if only one is left (rule 13). */
     public Optional<Player> winner() {
-        throw new UnsupportedOperationException("TODO: the last player alive, if any (rule 13)");
+        List<Player> alive = alivePlayers();
+        return alive.size() == 1 ? Optional.of(alive.get(0)) : Optional.empty();
     }
 }

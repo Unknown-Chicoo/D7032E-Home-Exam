@@ -2,12 +2,12 @@ package main.core.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
-import main.core.util.Randomizer;
-
-/** The cards a player currently holds. */
+/** The cards a player currently holds; queried by type traits, e.g. {@code CardType::isNope}. */
 public final class Hand {
     private final List<Card> cards;
 
@@ -16,27 +16,35 @@ public final class Hand {
     }
 
     public void add(Card card) {
-        throw new UnsupportedOperationException("TODO: add a card to the hand");
+        cards.add(card);
     }
 
     public boolean remove(Card card) {
-        throw new UnsupportedOperationException("TODO: remove a specific card from the hand");
+        return cards.remove(card);
     }
 
-    public Optional<Card> removeFirst(CardType type) {
-        throw new UnsupportedOperationException("TODO: remove the first card of the given type");
+    public Optional<Card> removeFirstMatching(Predicate<CardType> type) {
+        Iterator<Card> it = cards.iterator();
+        while (it.hasNext()) {
+            Card card = it.next();
+            if (type.test(card.type())) {
+                it.remove();
+                return Optional.of(card);
+            }
+        }
+        return Optional.empty();
     }
 
-    public boolean contains(CardType type) {
-        throw new UnsupportedOperationException("TODO: check whether the hand holds the given type");
+    public boolean containsMatching(Predicate<CardType> type) {
+        return cards.stream().anyMatch(card -> type.test(card.type()));
     }
 
-    public int count(CardType type) {
-        throw new UnsupportedOperationException("TODO: count cards of the given type");
+    public int count(Predicate<CardType> type) {
+        return (int) cards.stream().filter(card -> type.test(card.type())).count();
     }
 
     public int size() {
-        throw new UnsupportedOperationException("TODO: number of cards in the hand");
+        return cards.size();
     }
 
     /** Unmodifiable view of the cards. */
@@ -44,11 +52,10 @@ public final class Hand {
         return Collections.unmodifiableList(cards);
     }
 
-    public Card removeRandom(Randomizer random) {
-        throw new UnsupportedOperationException("TODO: remove and return a random card (two of a kind)");
-    }
-
+    /** Removes and returns all cards (rule 10: an exploded player discards their hand). */
     public List<Card> clear() {
-        throw new UnsupportedOperationException("TODO: remove and return all cards");
+        List<Card> all = List.copyOf(cards);
+        cards.clear();
+        return all;
     }
 }

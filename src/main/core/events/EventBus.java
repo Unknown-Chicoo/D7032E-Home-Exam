@@ -1,21 +1,23 @@
 package main.core.events;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-/** Delivers each published event to every subscribed listener. */
+/** Delivers each published event to every subscribed listener (Observer). */
 public final class EventBus {
     private final List<GameEventListener> listeners;
 
     public EventBus() {
-        this.listeners = new ArrayList<>();
+        this.listeners = new CopyOnWriteArrayList<>();
     }
 
     public void subscribe(GameEventListener listener) {
-        throw new UnsupportedOperationException("TODO: register a listener");
+        listeners.add(listener);
     }
 
     public void publish(GameEvent event) {
-        throw new UnsupportedOperationException("TODO: deliver the event to all listeners");
+        for (GameEventListener listener : listeners) {
+            listener.onEvent(event);
+        }
     }
 }

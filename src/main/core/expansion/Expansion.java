@@ -19,9 +19,18 @@ public interface Expansion {
         return List.of();
     }
 
+    /** Lets an expansion change the kittens other expansions created, before they are inserted (rule 6). */
+    default void adjustKittens(List<Card> kittens, int players) {
+    }
+
     void registerEffects(CardRegistry registry);
 
     default int maxPlayers() {
         return 5;
+    }
+
+    /** Setup order: the base game is 0 and add-ons 10, so add-ons can decorate what the base registered. */
+    default int order() {
+        return 0;
     }
 }

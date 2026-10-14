@@ -14,18 +14,19 @@ public final class DiscardPile {
     }
 
     public void add(Card card) {
-        throw new UnsupportedOperationException("TODO: discard a card");
+        cards.add(card);
     }
 
     public void addAll(Collection<Card> newCards) {
-        throw new UnsupportedOperationException("TODO: discard several cards");
+        cards.addAll(newCards);
     }
 
+    /** The most recently discarded card. */
     public Optional<Card> top() {
-        throw new UnsupportedOperationException("TODO: most recently discarded card");
+        return cards.isEmpty() ? Optional.empty() : Optional.of(cards.get(cards.size() - 1));
     }
 
     public int size() {
-        throw new UnsupportedOperationException("TODO: number of discarded cards");
+        return cards.size();
     }
 }
