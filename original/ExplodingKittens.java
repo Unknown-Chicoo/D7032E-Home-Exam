@@ -1,10 +1,10 @@
-import java.util.*; 
-import java.io.*; 
+import java.util.*;
+import java.io.*;
 import java.net.*;
 import java.util.concurrent.*;
 
 public class ExplodingKittens {
-    public ServerSocket aSocket;
+	public ServerSocket aSocket;
 	public static ArrayList<Card> deck = new ArrayList<Card>();
 	public static ArrayList<Card> discard = new ArrayList<Card>();
 	public static int numberOfTurnsToTake = 1; //attacked?
@@ -28,56 +28,56 @@ public class ExplodingKittens {
 	}
 
 	class Player {
-        public int playerID;
-        public boolean online;
-        public boolean isBot;
-        public Socket connection;
-        public boolean exploded = false;
-        public ObjectInputStream inFromClient;
-        public ObjectOutputStream outToClient;
-        public ArrayList<Card> hand = new ArrayList<Card>();
-        Scanner in = new Scanner(System.in);
- 
-        public Player(int playerID, boolean isBot, Socket connection, ObjectInputStream inFromClient, ObjectOutputStream outToClient) {
-        	this.playerID = playerID; this.connection = connection; this.inFromClient = inFromClient; this.outToClient = outToClient; this.isBot = isBot;
-        	if(connection == null)
-        		this.online = false;
-        	else
-        		this.online = true;
+		public int playerID;
+		public boolean online;
+		public boolean isBot;
+		public Socket connection;
+		public boolean exploded = false;
+		public ObjectInputStream inFromClient;
+		public ObjectOutputStream outToClient;
+		public ArrayList<Card> hand = new ArrayList<Card>();
+		Scanner in = new Scanner(System.in);
+
+		public Player(int playerID, boolean isBot, Socket connection, ObjectInputStream inFromClient, ObjectOutputStream outToClient) {
+			this.playerID = playerID; this.connection = connection; this.inFromClient = inFromClient; this.outToClient = outToClient; this.isBot = isBot;
+			if(connection == null)
+				this.online = false;
+			else
+				this.online = true;
 		}
-        public void sendMessage(Object message) {
-            if(online) {
-                try {outToClient.writeObject(message);} catch (Exception e) {}
-            } else if(!isBot){
-                System.out.println(message);                
-            }
-        }
-        public String readMessage(boolean interruptable) {
-            String word = " "; 
-            if(online)
-                try{
-                	word = (String) inFromClient.readObject();
-                } catch (Exception e){
-                	System.out.println("Reading from client failed: " + e.getMessage());
-                }
-            else
-                try {
-                	if(interruptable) {
-    				    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    				    int millisecondsWaited = 0;
-    				    while(!br.ready() && millisecondsWaited<(secondsToInterruptWithNope*1000)) {
-    				    	Thread.sleep(200);
-    				    	millisecondsWaited += 200;
-    				    }
-    				    if(br.ready())
-    				    	return br.readLine();               		
-                	} else {
-	                	in = new Scanner(System.in); 
-	                	word=in.nextLine();
-                	}
-                } catch(Exception e){System.out.println(e.getMessage());}
-            return word;
-        }		
+		public void sendMessage(Object message) {
+			if(online) {
+				try {outToClient.writeObject(message);} catch (Exception e) {}
+			} else if(!isBot){
+				System.out.println(message);
+			}
+		}
+		public String readMessage(boolean interruptable) {
+			String word = " ";
+			if(online)
+				try{
+					word = (String) inFromClient.readObject();
+				} catch (Exception e){
+					System.out.println("Reading from client failed: " + e.getMessage());
+				}
+			else
+				try {
+					if(interruptable) {
+						BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+						int millisecondsWaited = 0;
+						while(!br.ready() && millisecondsWaited<(secondsToInterruptWithNope*1000)) {
+							Thread.sleep(200);
+							millisecondsWaited += 200;
+						}
+						if(br.ready())
+							return br.readLine();
+					} else {
+						in = new Scanner(System.in);
+						word=in.nextLine();
+					}
+				} catch(Exception e){System.out.println(e.getMessage());}
+			return word;
+		}
 	}
 
 	public ExplodingKittens(String[] params) throws Exception {
@@ -101,7 +101,7 @@ public class ExplodingKittens {
 
 	public void initGame(int numPlayers, int numBots) {
 		try {
-	        server(numPlayers, numBots);
+			server(numPlayers, numBots);
 
 			//Create the deck
 			for(int i=0; i<6-players.size(); i++) {deck.add(Card.Defuse);}
@@ -126,8 +126,8 @@ public class ExplodingKittens {
 			for(int i=0; i<players.size()-1; i++) {deck.add(Card.ExplodingKitten);}
 			Collections.shuffle(deck);
 
-	        Random rnd = new Random();
-	        game(rnd.nextInt(players.size()));
+			Random rnd = new Random();
+			game(rnd.nextInt(players.size()));
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
 		}
@@ -142,22 +142,22 @@ public class ExplodingKittens {
 			if(p.hand.contains(Card.Nope)) { //only give the option to interrupt to those who have a Nope card
 				p.sendMessage("Press <Enter> to play Nope");
 				Runnable task = new Runnable() {
-		        	@Override
-		        	public void run() {
-	        			try {
-			        		String nextMessage = p.readMessage(true); //Read that is interrupted after secondsToInterruptWithNope
-			        		if(!nextMessage.equals(" ") && p.hand.contains(Card.Nope)) {
-		    	    			p.hand.remove(Card.Nope);
-		    	    			discard.add(0, Card.Nope);
-		    	    			for(Player notify: players)
-		    	    				notify.sendMessage("Player " + p.playerID + " played Nope");
-			        		}
-	        			} catch(Exception e) {
-	        				System.out.println("addToDiscardPile: " +e.getMessage());
-	        			}
-	        		}
-	        	};
-            	threadpool.execute(task);
+					@Override
+					public void run() {
+						try {
+							String nextMessage = p.readMessage(true); //Read that is interrupted after secondsToInterruptWithNope
+							if(!nextMessage.equals(" ") && p.hand.contains(Card.Nope)) {
+								p.hand.remove(Card.Nope);
+								discard.add(0, Card.Nope);
+								for(Player notify: players)
+									notify.sendMessage("Player " + p.playerID + " played Nope");
+							}
+						} catch(Exception e) {
+							System.out.println("addToDiscardPile: " +e.getMessage());
+						}
+					}
+				};
+				threadpool.execute(task);
 			}
 		}
 		threadpool.awaitTermination((secondsToInterruptWithNope*1000)+500, TimeUnit.MILLISECONDS); //add an additional delay to avoid concurrancy problems with the ObjectInputStream
@@ -173,7 +173,7 @@ public class ExplodingKittens {
 	public int checkNrNope() {
 		int i=0;
 		while(i<discard.size() && discard.get(i)==Card.Nope) {
-			i++;	
+			i++;
 		}
 		return i;
 	}
@@ -208,7 +208,7 @@ public class ExplodingKittens {
 						if(count>=2)
 							yourOptions += "\tTwo " + card + " [target] (available targets: " + otherPlayerIDs + ") (Steal random card)\n";
 						if(count>=3)
-							yourOptions += "\tThree " + card + " [target] [main.core.model.Card Type] (available targets: " + otherPlayerIDs + ") (Name and pick a card)\n";
+							yourOptions += "\tThree " + card + " [target] [Card Type] (available targets: " + otherPlayerIDs + ") (Name and pick a card)\n";
 						if(card == Card.Attack)
 							yourOptions += "\tAttack\n";
 						if(card == Card.Favor)
@@ -219,7 +219,7 @@ public class ExplodingKittens {
 							yourOptions += "\tSkip\n";
 						if(card == Card.SeeTheFuture)
 							yourOptions += "\tSeeTheFuture\n";
-					}  
+					}
 					yourOptions += "\tPass\n";
 					//We don't need to offer Nope as an option - it's only viable 5 seconds after another card is played and handled elsewhere
 					currentPlayer.sendMessage(yourOptions);
@@ -251,22 +251,22 @@ public class ExplodingKittens {
 							}
 						} else if(response.contains("Two")) { //played 2 of a kind - steal random card from target player
 							String[] args = response.split(" ");
-							currentPlayer.hand.remove(Card.valueOf(args[1])); 
+							currentPlayer.hand.remove(Card.valueOf(args[1]));
 							currentPlayer.hand.remove(Card.valueOf(args[1]));
 							discard.add(0, Card.valueOf(args[1]));
 							discard.add(0, Card.valueOf(args[1]));
 							addToDiscardPile(currentPlayer, "Two of a kind against player " + args[2]);
 							if(checkNrNope() % 2 == 0) {
 								Player target = players.get((Integer.valueOf(args[2])).intValue());
-						        Random rnd = new Random();
-						        Card aCard = target.hand.remove(rnd.nextInt(target.hand.size()-1));
-						        currentPlayer.hand.add(aCard);
-						        target.sendMessage("You gave " + aCard + " to player " + currentPlayer.playerID);
-						        currentPlayer.sendMessage("You received " + aCard + " from player " + target.playerID);								
+								Random rnd = new Random();
+								Card aCard = target.hand.remove(rnd.nextInt(target.hand.size()-1));
+								currentPlayer.hand.add(aCard);
+								target.sendMessage("You gave " + aCard + " to player " + currentPlayer.playerID);
+								currentPlayer.sendMessage("You received " + aCard + " from player " + target.playerID);
 							}
 						} else if(response.contains("Three")) { //played 3 of a kind - name a card and force target player to hand one over if they have it
 							String[] args = response.split(" ");
-							currentPlayer.hand.remove(Card.valueOf(args[1])); 
+							currentPlayer.hand.remove(Card.valueOf(args[1]));
 							currentPlayer.hand.remove(Card.valueOf(args[1]));
 							currentPlayer.hand.remove(Card.valueOf(args[1]));
 							discard.add(0, Card.valueOf(args[1]));
@@ -279,16 +279,16 @@ public class ExplodingKittens {
 								if(target.hand.contains(aCard)) {
 									target.hand.remove(aCard);
 									currentPlayer.hand.add(aCard);
-						        	target.sendMessage("Player " + currentPlayer.playerID + " stole " + aCard);
-						        	currentPlayer.sendMessage("You received " + aCard + " from player " + target.playerID);										
+									target.sendMessage("Player " + currentPlayer.playerID + " stole " + aCard);
+									currentPlayer.sendMessage("You received " + aCard + " from player " + target.playerID);
 								} else {
 									currentPlayer.sendMessage("The player did not have any " + aCard);
-								}								
+								}
 							}
 						} else if(response.equals("Attack")) {
 							int turnsToTake = 0;
 							if(discard.size()>0 && discard.get(0).equals(Card.Attack)) {
-								turnsToTake = numberOfTurnsToTake + 2;	
+								turnsToTake = numberOfTurnsToTake + 2;
 							} else {
 								turnsToTake = 2;
 							}
@@ -322,7 +322,7 @@ public class ExplodingKittens {
 									} else {
 										target.sendMessage("Not a viable option, try again");
 									}
-								}								
+								}
 							}
 						} else if(response.equals("Shuffle")) {
 							discard.add(0, Card.Shuffle);
@@ -344,8 +344,8 @@ public class ExplodingKittens {
 							addToDiscardPile(currentPlayer, "SeeTheFuture");
 							if(checkNrNope() % 2 == 0) {
 								currentPlayer.sendMessage("The top 3 cards are: " + deck.get(0) + " " + deck.get(1) + " " + deck.get(2));
-							}							
-						} 
+							}
+						}
 					} else {
 						currentPlayer.sendMessage("Not a viable option, try again");
 					}
@@ -366,60 +366,60 @@ public class ExplodingKittens {
 		System.exit(0);
 	}
 
-    public void client(String ipAddress) throws Exception {
-        //Connect to server
-        Socket aSocket = new Socket(ipAddress, 2048);
-        ObjectOutputStream outToServer = new ObjectOutputStream(aSocket.getOutputStream());
-        ObjectInputStream inFromServer = new ObjectInputStream(aSocket.getInputStream());
-        //Get the hand of apples from server
-        ExecutorService threadpool = Executors.newFixedThreadPool(1);
-        Runnable receive = new Runnable() {
-        	@Override
-        	public void run() {
-    			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));	
-        		while(true) {
-        			try {
-		        		String nextMessage = (String) inFromServer.readObject();
-	    	    		System.out.println(nextMessage);   		
-	    	    		if(nextMessage.contains("options") || nextMessage.contains("Give") || nextMessage.contains("Where")){ //options (your turn), Give (Opponent played Favor), Where (You defused an exploding kitten)
-	    	    			outToServer.writeObject(br.readLine());
-	    	    		} else if(nextMessage.contains("<Enter>")) { //Press <Enter> to play Nope and Interrupt
-	    				    int millisecondsWaited = 0;
-	    				    while(!br.ready() && millisecondsWaited<(secondsToInterruptWithNope*1000)) {
-	    				    	Thread.sleep(200);
-	    				    	millisecondsWaited += 200;
-	    				    }
-	    				    if(br.ready()) {
-	    				    	outToServer.writeObject(br.readLine());
-	    				    }	    				    
-	    				    else
-	    				    	outToServer.writeObject(" ");
-	    	    		}
-        			} catch(Exception e) {
-        				System.exit(0);
-        			}
-        		}
-        	}
-        };
+	public void client(String ipAddress) throws Exception {
+		//Connect to server
+		Socket aSocket = new Socket(ipAddress, 2048);
+		ObjectOutputStream outToServer = new ObjectOutputStream(aSocket.getOutputStream());
+		ObjectInputStream inFromServer = new ObjectInputStream(aSocket.getInputStream());
+		//Get the hand of apples from server
+		ExecutorService threadpool = Executors.newFixedThreadPool(1);
+		Runnable receive = new Runnable() {
+			@Override
+			public void run() {
+				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+				while(true) {
+					try {
+						String nextMessage = (String) inFromServer.readObject();
+						System.out.println(nextMessage);
+						if(nextMessage.contains("options") || nextMessage.contains("Give") || nextMessage.contains("Where")){ //options (your turn), Give (Opponent played Favor), Where (You defused an exploding kitten)
+							outToServer.writeObject(br.readLine());
+						} else if(nextMessage.contains("<Enter>")) { //Press <Enter> to play Nope and Interrupt
+							int millisecondsWaited = 0;
+							while(!br.ready() && millisecondsWaited<(secondsToInterruptWithNope*1000)) {
+								Thread.sleep(200);
+								millisecondsWaited += 200;
+							}
+							if(br.ready()) {
+								outToServer.writeObject(br.readLine());
+							}
+							else
+								outToServer.writeObject(" ");
+						}
+					} catch(Exception e) {
+						System.exit(0);
+					}
+				}
+			}
+		};
 
-        threadpool.execute(receive);
-    }
+		threadpool.execute(receive);
+	}
 
-    public void server(int numberPlayers, int numberOfBots) throws Exception {
-        players.add(new Player(0, false, null, null, null)); //add this instance as a player
-        //Open for connections if there are online players
-        for(int i=0; i<numberOfBots; i++) {
-            players.add(new Player(i+1, true, null, null, null)); //add a bot    
-        }
-        if(numberPlayers>1)
-            aSocket = new ServerSocket(2048);
-        for(int i=numberOfBots+1; i<numberPlayers+numberOfBots; i++) {
-            Socket connectionSocket = aSocket.accept();
-            ObjectInputStream inFromClient = new ObjectInputStream(connectionSocket.getInputStream());
-            ObjectOutputStream outToClient = new ObjectOutputStream(connectionSocket.getOutputStream());
-            players.add(new Player(i, false, connectionSocket, inFromClient, outToClient)); //add an online client
-            System.out.println("Connected to player " + i);
-            outToClient.writeObject("You connected to the server as player " + i + "\n");
-        }    
-    }
+	public void server(int numberPlayers, int numberOfBots) throws Exception {
+		players.add(new Player(0, false, null, null, null)); //add this instance as a player
+		//Open for connections if there are online players
+		for(int i=0; i<numberOfBots; i++) {
+			players.add(new Player(i+1, true, null, null, null)); //add a bot
+		}
+		if(numberPlayers>1)
+			aSocket = new ServerSocket(2048);
+		for(int i=numberOfBots+1; i<numberPlayers+numberOfBots; i++) {
+			Socket connectionSocket = aSocket.accept();
+			ObjectInputStream inFromClient = new ObjectInputStream(connectionSocket.getInputStream());
+			ObjectOutputStream outToClient = new ObjectOutputStream(connectionSocket.getOutputStream());
+			players.add(new Player(i, false, connectionSocket, inFromClient, outToClient)); //add an online client
+			System.out.println("Connected to player " + i);
+			outToClient.writeObject("You connected to the server as player " + i + "\n");
+		}
+	}
 }
