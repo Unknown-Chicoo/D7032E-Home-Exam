@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import main.core.engine.DefaultGameContext;
+import main.core.cards.GameContext;
 import main.core.engine.DrawResolver;
 import main.core.engine.GameEngine;
 import main.core.engine.GameSetup;
@@ -162,7 +162,7 @@ public final class Main {
 
     private static Player play(GameSetup.Result setup, Map<Player, PlayerController> controllers, EventBus bus,
             Randomizer random, Duration nopeWindow, ExecutorService pool) {
-        DefaultGameContext ctx = new DefaultGameContext(setup.state(), controllers, bus, random);
+        GameContext ctx = new GameContext(setup.state(), controllers, bus, random);
         PlayResolver plays = new PlayResolver(setup.registry(), new NopeResolver(nopeWindow, pool));
         return new GameEngine(ctx, plays, new DrawResolver(setup.registry())).run();
     }

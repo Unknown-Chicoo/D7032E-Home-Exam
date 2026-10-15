@@ -40,6 +40,6 @@ public final class GameState {
     /** The last player alive, if only one is left (rule 13). */
     public Optional<Player> winner() {
         List<Player> alive = alivePlayers();
-        return alive.size() == 1 ? Optional.of(alive.get(0)) : Optional.empty();
+        return alive.size() == 1 ? Optional.of(alive.getFirst()) : Optional.empty();
     }
 }

@@ -39,10 +39,6 @@ public final class Hand {
         return cards.stream().anyMatch(card -> type.test(card.type()));
     }
 
-    public int count(Predicate<CardType> type) {
-        return (int) cards.stream().filter(card -> type.test(card.type())).count();
-    }
-
     public int size() {
         return cards.size();
     }

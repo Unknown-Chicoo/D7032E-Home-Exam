@@ -75,8 +75,8 @@ and the trade-off you made.
   - Keep `CardEffect` and `DrawEffect` separate, rather than one interface with methods left
     empty.
 - **D – Dependency Inversion:** depend on abstractions.
-  - `core` depends on `CardType`, `Expansion`, `GameContext`, `PlayerController`,
-    `GameEventListener`, `MessageChannel` and `Randomizer`.
+  - `core` depends on `CardType`, `Expansion`, `PlayerController`, `GameEventListener`,
+    `MessageChannel` and `Randomizer`. (`GameContext` is a concrete class: decision 21.)
   - Concrete classes are created with `new` only in `Main`, `GameSetup` or the expansions.
   - Dependencies come in through constructors.
 
@@ -190,9 +190,11 @@ Apply these where the scaffold differs.
    - If everyone answers no, or the window passes, return `noped`.
    - Only the game thread mutates state. Workers only call `wantsToNope` with a `GameView`
      snapshot.
-8. **`Hand`** queries by type only through predicates: `containsMatching(Predicate<CardType>)`,
-   `removeFirstMatching(Predicate<CardType>)` and `count(Predicate<CardType>)`.
+8. **`Hand`** queries by type only through predicates: `containsMatching(Predicate<CardType>)`
+   and `removeFirstMatching(Predicate<CardType>)`.
    - There are no `CardType` overloads (primitiveness: they are built from the predicates).
+   - There is no `count`: nothing called it (controllers see `GameView`, not `Hand`), and it is
+     just `cards()` filtered and counted, so it was removed (primitiveness).
    - Call sites pass `DEFUSE::equals` or `CardType::isNope`.
 9. **`CardType` traits:** `isNope()`, `isNopeable()`, `isCat()` (used by bots). Later:
    `isVisibleInDeck()`.
@@ -233,12 +235,16 @@ Apply these where the scaffold differs.
     - `GameClient` catches `IOException`, prints "Connection lost" and returns normally.
 
 19. **Targets are gathered before the Nope window.** `CardEffect` has
-    `default Play prepare(GameContext ctx, Play play) { return play; }`.
+    `default Play prepare(GameContext ctx, Play play) throws InvalidMoveException { return play; }`.
     - Favor and two/three of a kind override it to ask `chooseTarget` (and
       `chooseCardTypeToName`) and return a completed `Play`. Everyone then knows the target
       before deciding to Nope, as in the original.
+    - `prepare` also checks the completed play and throws `InvalidMoveException` if it is
+      illegal. There is no separate `validate`: its only caller ran it right after `prepare`, so
+      the two were merged (primitiveness). The three effects share `Targeting.withTarget` and
+      `Targeting.requireTarget`.
     - `chooseAction` returns only the cards. `PlayResolver` runs: lone-Nope check → `effectFor`
-      → cards in hand? → `prepare` → `validate` → discard + `CardPlayed` → Nope window → `apply`.
+      → cards in hand? → `prepare` → discard + `CardPlayed` → Nope window → `apply`.
 
 20. **Smaller choices made while implementing phases 1–8:**
     - `CardPlayed` carries the whole `Play`, so the table sees the target and named type.
@@ -265,6 +271,15 @@ Apply these where the scaffold differs.
       cuts a message in half.
     - Seats are named "Player 1" (local human), "Player 2", … (remote) and "Bot 1", ….
       `Main` has three modes: menu, `bots [count] [seed]` and `client <host> [port]`.
+21. **`GameContext` is one concrete class.** The `GameContext` interface and `engine.DefaultGameContext`
+    were merged into `public final class GameContext` in `core.cards`.
+    - Same constructor `(GameState, Map<Player, PlayerController>, EventBus, Randomizer)` and
+      methods; `Main` creates it.
+    - Reason: primitiveness ("no interface with one implementation and no planned second one").
+      Tests can build a real `GameContext` from a `GameState` and fake controllers, so no
+      second implementation is needed.
+    - It imports only `model`, `players`, `events` and `util`, so the `cards` rule holds.
+      Effects still never see the engine (Interface Segregation).
 
 ## Phases
 

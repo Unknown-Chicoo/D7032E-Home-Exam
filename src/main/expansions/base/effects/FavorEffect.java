@@ -13,13 +13,10 @@ import main.core.model.Player;
 public final class FavorEffect implements CardEffect {
 
     @Override
-    public Play prepare(GameContext ctx, Play play) {
-        return Targeting.withTarget(ctx, play);
-    }
-
-    @Override
-    public void validate(GameContext ctx, Play play) throws InvalidMoveException {
-        Targeting.requireTarget(ctx, play);
+    public Play prepare(GameContext ctx, Play play) throws InvalidMoveException {
+        Play targeted = Targeting.withTarget(ctx, play);
+        Targeting.requireTarget(ctx, targeted);
+        return targeted;
     }
 
     @Override

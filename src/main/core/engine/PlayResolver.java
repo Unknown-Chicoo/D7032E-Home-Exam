@@ -14,7 +14,7 @@ import main.core.model.Player;
 
 /**
  * Resolves one play (rules 11, 12): reject a lone Nope, find the effect, check the hand, let the
- * effect complete and validate the play, discard the cards, open the Nope window, then apply.
+ * effect complete and check the play, discard the cards, open the Nope window, then apply.
  */
 public final class PlayResolver {
     private final CardRegistry registry;
@@ -27,13 +27,12 @@ public final class PlayResolver {
 
     public void resolve(GameContext ctx, Play play) throws InvalidMoveException {
         List<Card> cards = play.cards();
-        if (cards.size() == 1 && cards.get(0).type().isNope()) {
+        if (cards.size() == 1 && cards.getFirst().type().isNope()) {
             throw new InvalidMoveException("Nope can only be played in response to another card");
         }
         CardEffect effect = registry.effectFor(play);
         requireInHand(play.player(), cards);
         Play prepared = effect.prepare(ctx, play);
-        effect.validate(ctx, prepared);
 
         cards.forEach(card -> play.player().hand().remove(card));
         ctx.state().discard().addAll(cards);

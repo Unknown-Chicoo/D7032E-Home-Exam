@@ -57,8 +57,8 @@ public final class CardRegistry {
     /** The single-card effect, else the first matching combo (rule 11). */
     public CardEffect effectFor(Play play) throws InvalidMoveException {
         List<Card> cards = play.cards();
-        if (cards.size() == 1 && effects.containsKey(cards.get(0).type())) {
-            return effects.get(cards.get(0).type());
+        if (cards.size() == 1 && effects.containsKey(cards.getFirst().type())) {
+            return effects.get(cards.getFirst().type());
         }
         for (Combo combo : combos) {
             if (combo.matches().test(cards)) {
@@ -66,7 +66,7 @@ public final class CardRegistry {
             }
         }
         throw new InvalidMoveException(cards.size() == 1
-                ? cards.get(0).type().name() + " cannot be played on its own"
+                ? cards.getFirst().type().name() + " cannot be played on its own"
                 : "Those cards are not a combo that can be played");
     }
 

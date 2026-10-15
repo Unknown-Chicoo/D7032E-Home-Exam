@@ -18,21 +18,17 @@ import main.core.model.Player;
 public final class ThreeOfAKindEffect implements CardEffect {
 
     @Override
-    public Play prepare(GameContext ctx, Play play) {
+    public Play prepare(GameContext ctx, Play play) throws InvalidMoveException {
         Play targeted = Targeting.withTarget(ctx, play);
-        if (targeted.namedType().isPresent() || targeted.target().isEmpty()) {
+        Targeting.requireTarget(ctx, targeted);
+        if (targeted.namedType().isPresent()) {
             return targeted;
         }
         CardType named = ctx.controllerOf(play.player()).chooseCardTypeToName(ctx.viewFor(play.player()), typesInGame(ctx.state()));
-        return new Play(targeted.player(), targeted.cards(), targeted.target(), Optional.of(named));
-    }
-
-    @Override
-    public void validate(GameContext ctx, Play play) throws InvalidMoveException {
-        Targeting.requireTarget(ctx, play);
-        if (play.namedType().isEmpty()) {
+        if (named == null) {
             throw new InvalidMoveException("Name the card type you want");
         }
+        return new Play(targeted.player(), targeted.cards(), targeted.target(), Optional.of(named));
     }
 
     @Override
