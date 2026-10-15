@@ -12,7 +12,7 @@ public interface Expansion {
     List<Card> createDeckCards(int players);
 
     /** The cards each player gets before dealing (rule 2); called once per player, so every hand gets its own cards. */
-    default List<Card> createStartingCards(int players) {
+    default List<Card> createStartingHand(int players) {
         return List.of();
     }
 

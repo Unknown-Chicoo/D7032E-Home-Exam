@@ -52,7 +52,7 @@ public final class BaseGame implements Expansion {
     }
 
     @Override
-    public List<Card> createStartingCards(int players) {
+    public List<Card> createStartingHand(int players) {
         List<Card> cards = new ArrayList<>();
         add(cards, DEFUSE, 1);
         return cards;

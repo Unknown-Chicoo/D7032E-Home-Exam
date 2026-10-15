@@ -13,6 +13,7 @@ import main.core.model.CardType;
 import main.core.model.GameState;
 import main.core.model.Play;
 import main.core.model.Player;
+import main.expansions.base.BaseCardType;
 
 /** Three of a kind: name a card type and take one from the target if they have it (rule 11g). */
 public final class ThreeOfAKindEffect implements CardEffect {
@@ -48,6 +49,9 @@ public final class ThreeOfAKindEffect implements CardEffect {
         Stream<Card> inDiscard = state.discard().cards().stream();
         return Stream.of(inHands, inDeck, inDiscard).flatMap(cards -> cards)
                 .map(Card::type)
+                // A kitten can never be held in the base game (rule 10). An expansion that lets
+                // players hold kittens (Streaking) would need to change this.
+                .filter(type -> type != BaseCardType.EXPLODING_KITTEN)
                 .distinct()
                 .sorted(Comparator.comparing(CardType::name))
                 .toList();

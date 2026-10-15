@@ -303,7 +303,7 @@ Apply these where the scaffold differs.
     - **Targeting.** Candidates are other living players who hold at least one card. If there is
       none, `Targeting.withTarget` throws `InvalidMoveException` in `prepare`, so nothing is
       discarded.
-    - **Starting cards.** `Expansion.createStartingCards(players)` returns the cards that *one*
+    - **Starting cards.** `Expansion.createStartingHand(players)` returns the cards that *one*
       player gets (`BaseGame`: 1 Defuse). `DeckFactory.startingHand` is called once for each
       player, so every hand gets its own list.
 

@@ -18,7 +18,7 @@ public final class DeckFactory {
     /** The cards one player gets before dealing, e.g. one Defuse (rule 2); call it once per player. */
     public List<Card> startingHand(List<Expansion> expansions, int players) {
         List<Card> cards = new ArrayList<>();
-        expansions.forEach(e -> cards.addAll(e.createStartingCards(players)));
+        expansions.forEach(e -> cards.addAll(e.createStartingHand(players)));
         return cards;
     }
 
