@@ -59,8 +59,8 @@ public interface GameEvent {
     record PlayNoped(Player by, Play play, boolean noped) implements GameEvent {
         @Override
         public String describe() {
-            return by.name() + " played NOPE against " + play.player().name() + "'s " + names(play.cards())
-                    + (noped ? ": it is now Noped" : ": Yup, it is back on");
+            return by.name() + " played NOPE: " + play.player().name() + "'s " + names(play.cards())
+                    + (noped ? " is cancelled" : " is back on (Yup)");
         }
     }
 
