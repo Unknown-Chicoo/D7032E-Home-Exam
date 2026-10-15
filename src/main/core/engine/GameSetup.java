@@ -3,7 +3,7 @@ package main.core.engine;
 import java.util.Comparator;
 import java.util.List;
 
-import main.core.cards.CardRegistry;
+import main.core.rules.CardRegistry;
 import main.core.expansion.DeckFactory;
 import main.core.expansion.Expansion;
 import main.core.model.Deck;
@@ -13,22 +13,40 @@ import main.core.model.Player;
 import main.core.model.TurnState;
 import main.core.util.Randomizer;
 
-/** Builds the initial game state and card registry, following rules 1–8 in order. */
+/** Builds the initial game state and card registry from the chosen expansions, following rules 1–8 in order. */
 public final class GameSetup {
     private static final int HAND_SIZE = 7;
 
     private final DeckFactory deckFactory;
     private final Randomizer random;
 
+    /**
+     * Creates the setup.
+     *
+     * @param random the game's randomizer, used for both shuffles and the start player
+     */
     public GameSetup(DeckFactory deckFactory, Randomizer random) {
         this.deckFactory = deckFactory;
         this.random = random;
     }
 
-    /** The prepared state and the registry wired by the expansions. */
+    /**
+     * The prepared game.
+     *
+     * @param state the dealt state with the kittens shuffled in and a random start player
+     * @param registry the effects registered by the expansions, in {@code order()} order
+     */
     public record Result(GameState state, CardRegistry registry) {
     }
 
+    /**
+     * Sets up a new game.
+     *
+     * @param expansions the chosen expansions, in any order; sorted here by {@link Expansion#order()}
+     * @param playerNames one name per seat, in seat order
+     * @throws IllegalArgumentException if there are fewer than 2 players or more than the highest
+     *         {@link Expansion#maxPlayers()} allows (rule 1), or if two expansions register the same type
+     */
     public Result setUp(List<Expansion> expansions, List<String> playerNames) {
         List<Expansion> ordered = expansions.stream().sorted(Comparator.comparingInt(Expansion::order)).toList();
         int n = playerNames.size();

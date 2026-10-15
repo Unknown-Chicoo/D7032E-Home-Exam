@@ -1,7 +1,7 @@
 package main.expansions.base.effects;
 
-import main.core.cards.CardEffect;
-import main.core.cards.GameContext;
+import main.core.rules.CardEffect;
+import main.core.rules.GameContext;
 import main.core.model.Play;
 import main.core.model.TurnState;
 
@@ -11,6 +11,7 @@ import main.core.model.TurnState;
  */
 public final class AttackEffect implements CardEffect {
 
+    /** Ends the turn through {@code passTo}, so the attacker does not draw. */
     @Override
     public void apply(GameContext ctx, Play play) {
         TurnState turns = ctx.state().turns();

@@ -6,19 +6,28 @@ import java.time.Duration;
 import main.io.ConsoleInput;
 import main.io.ConsoleOutput;
 
-/** Thin client: prints server text, sends back the chosen index, never parses text (Req. 17). */
+/**
+ * Thin client run on a remote player's machine: prints the server's text and sends back the chosen
+ * index (Req. 17).
+ */
 public final class GameClient {
     private final MessageChannel channel;
     private final ConsoleInput in;
     private final ConsoleOutput out;
 
+    /** Creates a client for an open connection to the server; {@link #run()} closes it. */
     public GameClient(MessageChannel channel, ConsoleInput in, ConsoleOutput out) {
         this.channel = channel;
         this.in = in;
         this.out = out;
     }
 
-    /** Runs until GAME_OVER; a lost connection prints "Connection lost" and returns normally. */
+    /**
+     * Runs until GAME_OVER, then closes the channel. A lost connection prints "Connection lost" and
+     * returns normally.
+     *
+     * @throws IllegalStateException if the console input ends while a question waits for an answer
+     */
     public void run() {
         try (channel) {
             while (true) {

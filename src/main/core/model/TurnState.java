@@ -2,10 +2,7 @@ package main.core.model;
 
 import java.util.List;
 
-/**
- * Whose turn it is and how many turns they still owe; replaces the original static counter.
- * Only primitive operations: the rules that use them (Attack, Skip) live in the effects.
- */
+/** Whose turn it is, how many turns they still owe, and the direction of play. */
 public final class TurnState {
     private final List<Player> players;
     private int currentIndex;
@@ -13,6 +10,12 @@ public final class TurnState {
     private int direction;
     private int turnNumber;
 
+    /**
+     * Starts with one turn for the start player, clockwise.
+     *
+     * @param players every seat in seat order; copied
+     * @param startIndex the index in {@code players} of the player who starts (rule 8)
+     */
     public TurnState(List<Player> players, int startIndex) {
         this.players = List.copyOf(players);
         this.currentIndex = startIndex;
@@ -21,15 +24,17 @@ public final class TurnState {
         this.turnNumber = 0;
     }
 
+    /** The player whose turn it is. */
     public Player current() {
         return players.get(currentIndex);
     }
 
+    /** How many turns the current player still owes, counting this one; above 1 when under attack (rule 11a). */
     public int turnsLeft() {
         return turnsLeft;
     }
 
-    /** Increments whenever a turn ends, so the engine can tell that an effect ended the turn. */
+    /** Increments whenever a turn ends; compare it before and after an action to tell whether the turn ended. */
     public int turnNumber() {
         return turnNumber;
     }
@@ -44,14 +49,19 @@ public final class TurnState {
         }
     }
 
-    /** Ends the current player's turns and gives {@code next} the given number of turns. */
+    /**
+     * Ends the current player's turns, including any still owed, and hands the turn on (rule 11a).
+     *
+     * @param next the player who takes over
+     * @param turns how many turns {@code next} must take
+     */
     public void passTo(Player next, int turns) {
         turnNumber++;
         currentIndex = players.indexOf(next);
         turnsLeft = turns;
     }
 
-    /** Flips the order of play. */
+    /** Flips the order of play; {@link #nextAlive} and {@link #endTurn} follow the new direction. */
     public void reverse() {
         direction = -direction;
     }
@@ -61,14 +71,22 @@ public final class TurnState {
         return direction;
     }
 
-    /** An exploded current player forfeits any turns still owed; the next living player gets one (rule 10). */
+    /**
+     * An exploded current player forfeits any turns still owed; the next living player gets one
+     * (rule 10). Does nothing if {@code player} is not the current player.
+     */
     public void playerEliminated(Player player) {
         if (player == current()) {
             passTo(nextAlive(player), 1);
         }
     }
 
-    /** The next living player after {@code player} in the direction of play; itself if it is the only one left. */
+    /**
+     * The next living player after {@code player} in the direction of play.
+     *
+     * @return {@code player} itself if it is the only one left alive
+     * @throws IllegalStateException if nobody is alive
+     */
     public Player nextAlive(Player player) {
         int start = players.indexOf(player);
         for (int step = 1; step <= players.size(); step++) {

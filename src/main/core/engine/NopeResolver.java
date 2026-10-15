@@ -10,7 +10,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import main.core.cards.GameContext;
+import main.core.rules.GameContext;
 import main.core.events.GameEvent.PlayNoped;
 import main.core.model.CardType;
 import main.core.model.Play;
@@ -20,20 +20,30 @@ import main.core.players.GameView;
 import main.core.players.NopeOffer;
 import main.core.players.PlayerController;
 
-/**
- * Runs the timed Nope window in rounds, asking eligible players in parallel (rule 12, Req. 20).
- * Only the calling game thread mutates state; workers only call {@code wantsToNope} on a snapshot.
- */
+/** Runs the timed Nope window for a play, in rounds, asking eligible players in parallel (rule 12, Req. 20). */
 public final class NopeResolver {
     private final Duration window;
     private final ExecutorService pool;
 
+    /**
+     * Creates the resolver.
+     *
+     * @param window how long each round stays open, e.g. 5 seconds in play and a few milliseconds in tests
+     * @param pool runs the {@code wantsToNope} calls; the caller owns it and shuts it down
+     */
     public NopeResolver(Duration window, ExecutorService pool) {
         this.window = window;
         this.pool = pool;
     }
 
-    /** Whether the play ends up Noped; each Nope flips the result and opens a new round. */
+    /**
+     * Runs the Nope window for an already announced play. Call on the game thread, which alone changes
+     * state; pool threads only call {@code wantsToNope} on a {@code GameView} snapshot. Each Nope is
+     * discarded, flips the result, is published as {@code PlayNoped} and opens a new round in which its
+     * player cannot Nope. Each round blocks for at most the window; returns at once if nobody holds a Nope.
+     *
+     * @return true if the play ends up cancelled
+     */
     public boolean isNoped(GameContext ctx, Play play) {
         boolean noped = false;
         Player lastActor = play.player();
@@ -51,8 +61,8 @@ public final class NopeResolver {
 
     /**
      * One round: asks every eligible player in parallel and waits for all answers or the window's end.
-     * Of those who said yes, the first in turn order after the actor wins, so the outcome never depends
-     * on thread timing (a seeded bots-only game is repeatable). A late or failed answer counts as "no".
+     * Of those who said yes, the first in turn order after the actor wins, never the fastest thread, so a
+     * seeded game repeats. A late or failed answer counts as "no".
      */
     private Optional<Player> firstToNope(GameContext ctx, NopeOffer offer) {
         List<Player> eligible = othersInTurnOrder(ctx.state().turns(), offer.actor()).stream()

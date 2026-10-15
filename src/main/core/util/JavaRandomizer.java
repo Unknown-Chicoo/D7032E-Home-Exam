@@ -8,15 +8,22 @@ import java.util.Random;
 public final class JavaRandomizer implements Randomizer {
     private final Random random;
 
+    /**
+     * Creates a randomizer whose sequence is fully determined by {@code seed}.
+     *
+     * @param seed the same seed always gives the same sequence of numbers and shuffles
+     */
     public JavaRandomizer(long seed) {
         this.random = new Random(seed);
     }
 
+    /** Delegates to {@link Random#nextInt(int)}. */
     @Override
     public int nextInt(int bound) {
         return random.nextInt(bound);
     }
 
+    /** Delegates to {@link Collections#shuffle(List, Random)}. */
     @Override
     public <T> void shuffle(List<T> list) {
         Collections.shuffle(list, random);

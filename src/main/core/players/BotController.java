@@ -16,7 +16,10 @@ import main.core.model.Player;
 import main.core.model.TurnAction;
 import main.core.util.Randomizer;
 
-/** Computer player that decides only through {@link CardType} traits, never concrete card enums (Req. 16). */
+/**
+ * Computer player that decides only through {@link CardType} traits, so it can play any expansion's
+ * cards (Req. 16).
+ */
 public final class BotController implements PlayerController {
     private static final int PAIR_CHANCE = 35;
     private static final int ACTION_CHANCE = 40;
@@ -25,11 +28,16 @@ public final class BotController implements PlayerController {
 
     private final Randomizer random;
 
+    /**
+     * Creates a bot with its own random stream.
+     *
+     * @param random must not be shared with the game or other bots, or thread timing in the Nope window changes its choices
+     */
     public BotController(Randomizer random) {
         this.random = random;
     }
 
-    /** Sometimes plays a pair of cats or an action card; otherwise draws. */
+    /** Sometimes plays a pair of cats or a random action card; otherwise draws. */
     @Override
     public TurnAction chooseAction(GameView view) {
         Optional<CardType> pairType = catPair(view.hand());
@@ -58,16 +66,19 @@ public final class BotController implements PlayerController {
         return view.hand().stream().min(Comparator.comparingInt(BotController::usefulness)).orElseThrow();
     }
 
+    /** Names a random type from the options. */
     @Override
     public CardType chooseCardTypeToName(GameView view, List<CardType> options) {
         return options.get(random.nextInt(options.size()));
     }
 
+    /** Puts the kitten back at a random position, top and bottom included. */
     @Override
     public int chooseDeckPosition(GameView view, int deckSize) {
         return random.nextInt(deckSize + 1);
     }
 
+    /** Picks a random option. */
     @Override
     public int choose(GameView view, Question question) {
         return random.nextInt(question.options().size());
@@ -108,6 +119,7 @@ public final class BotController implements PlayerController {
         return !type.isCat() && !type.isNope() && type.isNopeable();
     }
 
+    /** Lower is less useful: cat 0, action 1, Nope 2, anything else (e.g. Defuse) 3. */
     private static int usefulness(Card card) {
         if (card.type().isCat()) {
             return 0;

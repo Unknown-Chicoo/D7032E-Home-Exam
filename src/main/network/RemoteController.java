@@ -22,8 +22,9 @@ import main.io.ActionMenu;
 import main.io.TextRenderer;
 
 /**
- * Remote proxy of a human player: decisions and events travel as typed messages (Req. 17).
- * On an I/O failure it announces {@link PlayerDisconnected} and hands every later decision to its fallback.
+ * Plays a seat for a human on another machine, sending decisions and events as messages over a
+ * {@link MessageChannel} (Req. 17). On an I/O failure it announces {@link PlayerDisconnected} once and
+ * lets its fallback make every later decision.
  */
 public final class RemoteController implements PlayerController, GameEventListener {
     private final MessageChannel channel;
@@ -35,7 +36,13 @@ public final class RemoteController implements PlayerController, GameEventListen
     private volatile boolean disconnected;
     private boolean announced;
 
-    /** {@code announcer} receives the disconnect event; {@code Main} passes {@code bus::publish}. */
+    /**
+     * Creates the controller; also subscribe it to the event bus so it forwards events.
+     *
+     * @param player the seat it plays; only events visible to this player are sent
+     * @param fallback takes over every decision once the connection is lost, normally a {@code BotController}
+     * @param announcer receives the disconnect event, once; {@code Main} passes {@code bus::publish}
+     */
     public RemoteController(MessageChannel channel, Player player, TextRenderer renderer, PlayerController fallback,
             GameEventListener announcer) {
         this.channel = channel;
@@ -109,6 +116,7 @@ public final class RemoteController implements PlayerController, GameEventListen
         return fallback.wantsToNope(view, offer);
     }
 
+    /** Sends the event's text if this player may see it; does nothing once disconnected. */
     @Override
     public void onEvent(GameEvent event) {
         announceIfDisconnected();
@@ -123,7 +131,10 @@ public final class RemoteController implements PlayerController, GameEventListen
         }
     }
 
-    /** Ends the client session after the winner was announced (rule 13) and closes the connection. */
+    /**
+     * Call once after the game ends (rule 13): sends GAME_OVER with {@code farewell} and closes the
+     * connection.
+     */
     public void gameOver(String farewell) {
         try (channel) {
             if (!disconnected) {
@@ -185,7 +196,7 @@ public final class RemoteController implements PlayerController, GameEventListen
         }
     }
 
-    /** Only an in-range ANSWER to the open question counts; stale ones are dropped (decision 12). */
+    /** Only an in-range ANSWER to the open question counts; stale ones are dropped. */
     private static boolean isAnswer(Message reply, int id, List<String> options) {
         return reply.type() == MessageType.ANSWER && reply.id() == id
                 && reply.answerIndex() >= 0 && reply.answerIndex() < options.size();

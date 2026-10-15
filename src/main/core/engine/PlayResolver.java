@@ -3,28 +3,36 @@ package main.core.engine;
 import java.util.ArrayList;
 import java.util.List;
 
-import main.core.cards.CardEffect;
-import main.core.cards.CardRegistry;
-import main.core.cards.GameContext;
-import main.core.cards.InvalidMoveException;
+import main.core.rules.CardEffect;
+import main.core.rules.CardRegistry;
+import main.core.rules.GameContext;
+import main.core.rules.InvalidMoveException;
 import main.core.events.GameEvent.CardPlayed;
 import main.core.model.Card;
 import main.core.model.Play;
 import main.core.model.Player;
 
-/**
- * Resolves one play (rules 11, 12): reject a lone Nope, find the effect, check the hand, let the
- * effect complete and check the play, discard the cards, open the Nope window, then apply.
- */
+/** Resolves one play of one card or a combo (rules 11, 12). */
 public final class PlayResolver {
     private final CardRegistry registry;
     private final NopeResolver nopeResolver;
 
+    /** Creates a resolver that finds effects in {@code registry} and runs Nope windows with {@code nopeResolver}. */
     public PlayResolver(CardRegistry registry, NopeResolver nopeResolver) {
         this.registry = registry;
         this.nopeResolver = nopeResolver;
     }
 
+    /**
+     * Resolves {@code play}; call on the game thread. Rejects a lone Nope, finds the effect, checks that
+     * the cards are in the hand, lets the effect prepare the play, discards the cards and announces the
+     * play, runs the Nope window, then applies the effect unless it was Noped. A combo can always be
+     * Noped; a single card only if its type {@code isNopeable()} (rule 12).
+     *
+     * @throws InvalidMoveException if the play is illegal: a lone Nope, no matching effect, cards not
+     *         in the hand, or rejected by the effect's {@code prepare}. Nothing has been discarded and the
+     *         player chooses again.
+     */
     public void resolve(GameContext ctx, Play play) throws InvalidMoveException {
         List<Card> cards = play.cards();
         if (cards.size() == 1 && cards.getFirst().type().isNope()) {

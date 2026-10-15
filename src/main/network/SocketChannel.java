@@ -8,10 +8,7 @@ import java.net.Socket;
 import java.time.Duration;
 import java.util.Optional;
 
-/**
- * {@link MessageChannel} over a TCP socket using Object streams. A timed receive polls for
- * incoming bytes, so it never cuts a message in half and stops promptly when interrupted.
- */
+/** {@link MessageChannel} over a TCP socket using object streams. */
 public final class SocketChannel implements MessageChannel {
     private static final long POLL_MILLIS = 20;
 
@@ -21,7 +18,12 @@ public final class SocketChannel implements MessageChannel {
     private final Object sendLock = new Object();
     private final Object receiveLock = new Object();
 
-    /** Both ends write their stream header before reading the other's, so opening never deadlocks. */
+    /**
+     * Opens both object streams, writing this side's header before reading the other's, so the two
+     * ends never deadlock.
+     *
+     * @throws IOException if the socket is already closed or the other side's header cannot be read
+     */
     public SocketChannel(Socket socket) throws IOException {
         this.socket = socket;
         this.out = new ObjectOutputStream(socket.getOutputStream());
@@ -49,6 +51,7 @@ public final class SocketChannel implements MessageChannel {
         }
     }
 
+    /** Polls for incoming bytes, so it never reads half a message and returns promptly when interrupted. */
     @Override
     public Optional<Message> receive(Duration timeout) throws IOException {
         long deadline = System.nanoTime() + timeout.toNanos();

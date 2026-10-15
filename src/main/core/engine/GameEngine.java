@@ -1,7 +1,7 @@
 package main.core.engine;
 
-import main.core.cards.GameContext;
-import main.core.cards.InvalidMoveException;
+import main.core.rules.GameContext;
+import main.core.rules.InvalidMoveException;
 import main.core.events.GameEvent.GameWon;
 import main.core.events.GameEvent.MoveRejected;
 import main.core.events.GameEvent.TurnStarted;
@@ -11,18 +11,25 @@ import main.core.model.Play;
 import main.core.model.Player;
 import main.core.model.TurnState;
 
-/** The game loop: each turn, plays until the turn ends, until one player is left (rules 9, 13). */
+/** The game loop: runs turns until one player is left (rules 9, 13). */
 public final class GameEngine {
     private final GameContext ctx;
     private final PlayResolver playResolver;
     private final DrawResolver drawResolver;
 
+    /** Creates the engine for the game in {@code ctx}; nothing runs until {@link #run()}. */
     public GameEngine(GameContext ctx, PlayResolver playResolver, DrawResolver drawResolver) {
         this.ctx = ctx;
         this.playResolver = playResolver;
         this.drawResolver = drawResolver;
     }
 
+    /**
+     * Plays the game to the end on the calling thread, which becomes the game thread. Asks the current
+     * player for actions until their turn ends, then moves on; publishes {@code GameWon} at the end (rule 13).
+     *
+     * @return the winner
+     */
     public Player run() {
         GameState state = ctx.state();
         TurnState turns = state.turns();

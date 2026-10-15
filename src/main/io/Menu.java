@@ -6,18 +6,26 @@ import java.util.List;
 import main.core.expansion.Expansion;
 import main.core.expansion.ExpansionLoader;
 
-/** Start menu that asks for expansions, players and mode; the base game (order 0) is always included (Req. 15). */
+/** Start menu that asks for expansions, players and mode (Req. 15). */
 public final class Menu {
     private final ConsoleInput in;
     private final ConsoleOutput out;
     private final ExpansionLoader loader;
 
+    /** Creates a menu that offers the expansions {@code loader} finds. */
     public Menu(ConsoleInput in, ConsoleOutput out, ExpansionLoader loader) {
         this.in = in;
         this.out = out;
         this.loader = loader;
     }
 
+    /**
+     * Asks the questions on the console, re-asking after invalid answers. Expansions with order 0 are
+     * always included; the player count stays between 2 and the highest {@code maxPlayers()} of the
+     * chosen expansions (rule 1).
+     *
+     * @throws IllegalStateException if the console input ends, or no expansions are installed
+     */
     public GameConfig run() {
         out.println("=== Exploding Kittens ===");
         List<Expansion> available = loader.available();

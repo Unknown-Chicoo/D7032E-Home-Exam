@@ -3,7 +3,11 @@ package main.network;
 import main.core.events.GameEvent;
 import main.core.model.Player;
 
-/** A remote player's connection was lost and a bot now plays their seat (Req. 17). */
+/**
+ * A remote player's connection was lost and a bot now plays their seat (Req. 17).
+ *
+ * @param player the seat that a bot took over
+ */
 public record PlayerDisconnected(Player player) implements GameEvent {
     @Override
     public String describe() {

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import main.core.cards.CardRegistry;
+import main.core.rules.CardRegistry;
 import main.core.expansion.Expansion;
 import main.core.model.Card;
 import main.expansions.base.effects.AttackEffect;
@@ -25,14 +25,16 @@ import main.expansions.base.effects.SkipEffect;
 import main.expansions.base.effects.ThreeOfAKindEffect;
 import main.expansions.base.effects.TwoOfAKindEffect;
 
-/** The base game packaged as an expansion plug-in (rules 2–13). Nope is handled by the Nope window, not registered. */
+/** The base game as an expansion (rules 2–13); order 0, so it is set up first and always included. */
 public final class BaseGame implements Expansion {
 
+    /** "Base game". */
     @Override
     public String name() {
         return "Base game";
     }
 
+    /** The deck before dealing (rule 3): 2 Defuse for 2–4 players or 1 for 5, plus the fixed action and cat cards. */
     @Override
     public List<Card> createDeckCards(int players) {
         List<Card> cards = new ArrayList<>();
@@ -51,6 +53,7 @@ public final class BaseGame implements Expansion {
         return cards;
     }
 
+    /** One Defuse for one player (rule 2). */
     @Override
     public List<Card> createStartingHand(int players) {
         List<Card> cards = new ArrayList<>();
@@ -58,6 +61,7 @@ public final class BaseGame implements Expansion {
         return cards;
     }
 
+    /** One Exploding Kitten fewer than there are players (rule 6). */
     @Override
     public List<Card> createKittens(int players) {
         List<Card> cards = new ArrayList<>();
@@ -65,6 +69,10 @@ public final class BaseGame implements Expansion {
         return cards;
     }
 
+    /**
+     * The five action effects, two and three of a kind of any type (rules 11a–g), and the Exploding
+     * Kitten draw effect. Nope gets no play effect: the Nope window handles it (rule 12).
+     */
     @Override
     public void registerEffects(CardRegistry registry) {
         registry.register(ATTACK, new AttackEffect());

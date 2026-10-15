@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import main.core.cards.GameContext;
+import main.core.rules.GameContext;
 import main.core.engine.DrawResolver;
 import main.core.engine.GameEngine;
 import main.core.engine.GameSetup;
@@ -40,12 +40,17 @@ import main.network.Message;
 import main.network.RemoteController;
 import main.network.SocketChannel;
 
-/**
- * Composition root: the only place that creates adapters and wires the game together.
- * Usage: no arguments for the menu, {@code bots [count] [seed]} for a bots-only game,
- * {@code client <host> [port]} to join a hosted game.
- */
+/** Program entry point: creates the console, network and bot players and wires them to the game. */
 public final class Main {
+
+    /**
+     * Starts the program in the mode the arguments name: the menu, a bots-only game or a client. Owns
+     * the single daemon thread pool and shuts it down when the game ends; network errors and closed
+     * input end the program with a message.
+     *
+     * @param args empty for the menu, {@code bots [count] [seed]} (default 4 bots, random seed) or
+     *        {@code client <host> [port]} to join a hosted game
+     */
     public static void main(String[] args) {
         ExecutorService pool = Executors.newCachedThreadPool(task -> {
             Thread thread = new Thread(task);
@@ -155,8 +160,8 @@ public final class Main {
     }
 
     /**
-     * Each bot gets its own stream, so a bot's choices don't depend on how Nope workers interleave
-     * on a shared one. Seats count from 1, so no bot reuses the game's own seed.
+     * A separate stream per bot, seeded with {@code seed + seat + 1} (seats count from 0), so it never
+     * equals the game's seed and Nope worker timing cannot shift a bot's choices.
      */
     private static Randomizer seatRandom(long seed, int seat) {
         return new JavaRandomizer(seed + seat + 1);

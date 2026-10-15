@@ -7,10 +7,12 @@ import java.util.List;
 public final class ConsoleOutput {
     private final PrintStream out;
 
+    /** Writes to {@code out}, normally {@code System.out}. */
     public ConsoleOutput(PrintStream out) {
         this.out = out;
     }
 
+    /** Prints one line. */
     public void println(String text) {
         out.println(text);
     }

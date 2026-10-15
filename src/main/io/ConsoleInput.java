@@ -12,8 +12,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * The single reader of the console input stream. {@link #readLoop()} moves lines into a queue;
- * it starts no thread itself, {@code Main} submits the loop to the shared executor (Req. 20).
+ * The single reader of the console input stream: {@link #readLoop()} queues the lines and the read
+ * methods take them. Create only one per program.
  */
 public final class ConsoleInput {
     private static final long CLOSED_CHECK_MILLIS = 200;
@@ -23,14 +23,21 @@ public final class ConsoleInput {
     private final BlockingQueue<String> lines;
     private volatile boolean closed;
 
-    /** {@code out} is only used to re-ask after invalid input. */
+    /**
+     * Wraps the input stream; nothing is read until {@link #readLoop()} runs.
+     *
+     * @param out only used to re-ask after invalid input
+     */
     public ConsoleInput(InputStream in, ConsoleOutput out) {
         this.reader = new BufferedReader(new InputStreamReader(in));
         this.out = out;
         this.lines = new LinkedBlockingQueue<>();
     }
 
-    /** Reads lines into the queue until the stream ends. */
+    /**
+     * Reads lines into the queue until the stream ends or fails, then marks the input closed. Blocks,
+     * so the caller must run it on its own thread, e.g. by submitting it to the executor (Req. 20).
+     */
     public void readLoop() {
         try {
             String line;
@@ -46,7 +53,11 @@ public final class ConsoleInput {
         }
     }
 
-    /** Blocks for the next line; throws {@link IllegalStateException} once the input has ended. */
+    /**
+     * Blocks for the next line.
+     *
+     * @throws IllegalStateException once the input has ended and every line was read, or if interrupted
+     */
     public String readLine() {
         try {
             while (true) {
@@ -64,7 +75,11 @@ public final class ConsoleInput {
         }
     }
 
-    /** The next line, or empty if none arrives within {@code timeout} or the wait is interrupted (rule 12). */
+    /**
+     * Waits a limited time for the next line, for the Nope prompt (rule 12).
+     *
+     * @return empty if no line arrives within {@code timeout} or the wait is interrupted
+     */
     public Optional<String> readLineWithin(Duration timeout) {
         try {
             return Optional.ofNullable(lines.poll(timeout.toMillis(), TimeUnit.MILLISECONDS));
@@ -79,7 +94,11 @@ public final class ConsoleInput {
         lines.clear();
     }
 
-    /** Reads until a whole number in [min, max] is entered, re-asking after anything else. */
+    /**
+     * Reads until a whole number in [min, max] is entered, re-asking after anything else.
+     *
+     * @throws IllegalStateException if the input ends first
+     */
     public int readInt(int min, int max) {
         while (true) {
             Optional<Integer> value = parseInt(readLine(), min, max);
@@ -90,11 +109,21 @@ public final class ConsoleInput {
         }
     }
 
+    /**
+     * Reads the index of one of {@code options}, re-asking until it is valid.
+     *
+     * @return 0 to {@code options.size() - 1}
+     * @throws IllegalStateException if the input ends first
+     */
     public int choose(List<String> options) {
         return readInt(0, options.size() - 1);
     }
 
-    /** The line as a whole number in [min, max], if it is one. */
+    /**
+     * Parses a line typed by the player; surrounding spaces are ignored.
+     *
+     * @return the number, or empty if the line is not a whole number in [min, max]
+     */
     public static Optional<Integer> parseInt(String line, int min, int max) {
         try {
             int value = Integer.parseInt(line.trim());

@@ -5,7 +5,11 @@ import java.util.List;
 
 import main.core.model.Card;
 
-/** Collects the cards that the chosen expansions contribute to a game (rules 2, 3, 6). */
+/**
+ * Combines the cards the chosen expansions contribute to a game (rules 2, 3, 6). In every method,
+ * {@code expansions} must be sorted by {@link Expansion#order()}, {@code players} is the number of
+ * seats, and the result is a new modifiable list.
+ */
 public final class DeckFactory {
 
     /** The deck before dealing (rule 3). */
@@ -22,7 +26,7 @@ public final class DeckFactory {
         return cards;
     }
 
-    /** The kittens to insert after dealing, after every expansion could adjust them (rule 6). */
+    /** The kittens to insert after dealing: created by every expansion, then adjusted by each (rule 6). */
     public List<Card> kittens(List<Expansion> expansions, int players) {
         List<Card> kittens = new ArrayList<>();
         expansions.forEach(e -> kittens.addAll(e.createKittens(players)));

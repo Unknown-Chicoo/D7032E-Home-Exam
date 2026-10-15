@@ -17,34 +17,44 @@ public final class ConsoleController implements PlayerController {
     private final ConsoleOutput out;
     private final TextRenderer renderer;
 
+    /**
+     * Creates the controller.
+     *
+     * @param in must be the program's only {@link ConsoleInput}, shared with the menu
+     */
     public ConsoleController(ConsoleInput in, ConsoleOutput out, TextRenderer renderer) {
         this.in = in;
         this.out = out;
         this.renderer = renderer;
     }
 
+    /** Shows the hand and table, then the {@link ActionMenu}. */
     @Override
     public TurnAction chooseAction(GameView view) {
         ActionMenu menu = ActionMenu.of(view);
         return menu.actions().get(ask(renderer.render(view) + "\nYour move:", menu.labels()));
     }
 
+    /** Lists the candidates by name. */
     @Override
     public Player chooseTarget(GameView view, List<Player> candidates) {
         return candidates.get(ask("Choose a target:", candidates.stream().map(Player::name).toList()));
     }
 
+    /** Lists the cards in the hand. */
     @Override
     public Card chooseCardToGive(GameView view, Player requester) {
         List<String> hand = view.hand().stream().map(renderer::name).toList();
         return view.hand().get(ask(renderer.favorPrompt(requester), hand));
     }
 
+    /** Lists the type names. */
     @Override
     public CardType chooseCardTypeToName(GameView view, List<CardType> options) {
         return options.get(ask("Name the card type you want:", options.stream().map(CardType::name).toList()));
     }
 
+    /** Reads a number from 0 (top) to {@code deckSize} (bottom). */
     @Override
     public int chooseDeckPosition(GameView view, int deckSize) {
         out.println(renderer.deckPositionPrompt(deckSize));
@@ -52,12 +62,16 @@ public final class ConsoleController implements PlayerController {
         return in.readInt(0, deckSize);
     }
 
+    /** Shows the prompt and the numbered options. */
     @Override
     public int choose(GameView view, Question question) {
         return ask(question.prompt(), question.options());
     }
 
-    /** Runs on a worker thread; answering "1" within the window plays the Nope (rule 12). */
+    /**
+     * Runs on a worker thread; answering "1" within the window plays the Nope, anything else or
+     * nothing does not (rule 12).
+     */
     @Override
     public boolean wantsToNope(GameView view, NopeOffer offer) {
         out.println(renderer.nopePrompt(offer));

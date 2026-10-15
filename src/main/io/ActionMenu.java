@@ -16,12 +16,16 @@ import main.core.players.GameView;
 
 /**
  * A player's numbered choices on their turn: draw, or play one, two or three cards of a type held
- * (rules 9, 11). Legality is left to the engine, which explains a rejected play.
+ * (rules 9, 11). It does not check legality; the engine rejects illegal plays.
+ *
+ * @param labels the text of each choice; index 0 is always "Draw a card"
+ * @param actions the action for each label, at the same index
  */
 public record ActionMenu(List<String> labels, List<TurnAction> actions) {
 
     private static final String[] COUNT_WORDS = {"", "", "two ", "three "};
 
+    /** Builds the menu from {@code view.hand()}, card types in the order they first appear in the hand. */
     public static ActionMenu of(GameView view) {
         List<String> labels = new ArrayList<>();
         List<TurnAction> actions = new ArrayList<>();

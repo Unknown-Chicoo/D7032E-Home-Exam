@@ -5,10 +5,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
 
-/** Discovers installed expansions through {@link java.util.ServiceLoader} (Plugin), sorted by {@link Expansion#order()}. */
+/**
+ * Finds the installed expansions with {@link java.util.ServiceLoader}: the classes listed in
+ * {@code META-INF/services/main.core.expansion.Expansion} on the classpath.
+ */
 public final class ExpansionLoader {
 
-    /** The installed expansions; fails fast if none are registered, since a game needs cards. */
+    /**
+     * The installed expansions, sorted by {@link Expansion#order()}; each call creates new instances.
+     *
+     * @throws IllegalStateException if none are registered, i.e. the {@code resources} folder is not on
+     *         the classpath
+     */
     public List<Expansion> available() {
         List<Expansion> expansions = ServiceLoader.load(Expansion.class).stream()
                 .map(ServiceLoader.Provider::get)
@@ -21,6 +29,12 @@ public final class ExpansionLoader {
         return expansions;
     }
 
+    /**
+     * The installed expansion with this name, ignoring case.
+     *
+     * @return empty if none matches
+     * @throws IllegalStateException if no expansions are installed at all
+     */
     public Optional<Expansion> byName(String name) {
         return available().stream().filter(e -> e.name().equalsIgnoreCase(name)).findFirst();
     }
