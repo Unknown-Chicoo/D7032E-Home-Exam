@@ -6,7 +6,6 @@ import java.util.List;
 import main.core.cards.CardRegistry;
 import main.core.expansion.DeckFactory;
 import main.core.expansion.Expansion;
-import main.core.model.Card;
 import main.core.model.Deck;
 import main.core.model.DiscardPile;
 import main.core.model.GameState;
@@ -42,9 +41,8 @@ public final class GameSetup {
         CardRegistry registry = new CardRegistry();
         ordered.forEach(e -> e.registerEffects(registry));
 
-        List<Card> starting = deckFactory.startingCards(ordered, n);       // rule 2
-        for (int i = 0; i < starting.size(); i++) {
-            players.get(i % n).hand().add(starting.get(i));
+        for (Player player : players) {                                     // rule 2
+            deckFactory.startingHand(ordered, n).forEach(player.hand()::add);
         }
         Deck deck = new Deck();
         deck.addAll(deckFactory.deckCards(ordered, n));                     // rule 3

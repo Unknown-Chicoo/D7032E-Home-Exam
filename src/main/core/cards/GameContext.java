@@ -8,6 +8,8 @@ import java.util.Objects;
 
 import main.core.events.EventBus;
 import main.core.events.GameEvent;
+import main.core.events.GameEvent.CardLost;
+import main.core.events.GameEvent.CardReceived;
 import main.core.events.GameEvent.CardTransferred;
 import main.core.model.Card;
 import main.core.model.GameState;
@@ -54,7 +56,9 @@ public final class GameContext {
             throw new IllegalArgumentException(from.name() + " does not hold " + card.type().name());
         }
         to.hand().add(card);
-        publish(new CardTransferred(from, to, card));
+        publish(new CardTransferred(from, to));
+        publish(new CardLost(from, to, card));
+        publish(new CardReceived(to, from, card));
     }
 
     public void publish(GameEvent event) {

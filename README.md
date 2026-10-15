@@ -4,6 +4,8 @@ Exploding Kittens, refactored from `original/ExplodingKittens.java`.
 
 ## Build and run
 
+Requires **Java 21** or later (the code uses pattern-matching `switch` and `List.getFirst()`).
+
 Expansions are found with `ServiceLoader`, which reads
 `resources/META-INF/services/main.core.expansion.Expansion`. The `resources` folder must therefore
 be on the classpath. Without it the game stops at once with "No expansions found".

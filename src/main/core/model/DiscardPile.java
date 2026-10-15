@@ -2,6 +2,7 @@ package main.core.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +25,11 @@ public final class DiscardPile {
     /** The most recently discarded card. */
     public Optional<Card> top() {
         return cards.isEmpty() ? Optional.empty() : Optional.of(cards.get(cards.size() - 1));
+    }
+
+    /** Unmodifiable view of the cards, oldest first. */
+    public List<Card> cards() {
+        return Collections.unmodifiableList(cards);
     }
 
     public int size() {

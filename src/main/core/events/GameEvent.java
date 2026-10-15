@@ -55,11 +55,12 @@ public interface GameEvent {
         }
     }
 
-    /** A Nope was played against a play; a Nope on a Nope flips it back (rule 12). */
-    record PlayNoped(Player by, Play play) implements GameEvent {
+    /** A Nope was played against a play; a Nope on a Nope flips it back (rule 12). {@code noped} is the result. */
+    record PlayNoped(Player by, Play play, boolean noped) implements GameEvent {
         @Override
         public String describe() {
-            return by.name() + " played NOPE against " + play.player().name() + "'s " + names(play.cards());
+            return by.name() + " played NOPE against " + play.player().name() + "'s " + names(play.cards())
+                    + (noped ? ": it is now Noped" : ": Yup, it is back on");
         }
     }
 
@@ -85,10 +86,36 @@ public interface GameEvent {
     }
 
     /** A card moved from one hand to another (Favor, combos); which card stays hidden from the table. */
-    record CardTransferred(Player from, Player to, Card card) implements GameEvent {
+    record CardTransferred(Player from, Player to) implements GameEvent {
         @Override
         public String describe() {
-            return from.name() + " gave a card to " + to.name();
+            return from.name() + "'s card went to " + to.name();
+        }
+    }
+
+    /** The receiving side of a transfer; only the receiver sees which card they got. */
+    record CardReceived(Player to, Player from, Card card) implements GameEvent {
+        @Override
+        public String describe() {
+            return "You got " + card.type().name() + " from " + from.name();
+        }
+
+        @Override
+        public Optional<Player> privateTo() {
+            return Optional.of(to);
+        }
+    }
+
+    /** The losing side of a transfer; only the loser sees which card they lost. */
+    record CardLost(Player from, Player to, Card card) implements GameEvent {
+        @Override
+        public String describe() {
+            return "You lost " + card.type().name() + " to " + to.name();
+        }
+
+        @Override
+        public Optional<Player> privateTo() {
+            return Optional.of(from);
         }
     }
 

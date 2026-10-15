@@ -46,9 +46,6 @@ import main.network.SocketChannel;
  * {@code client <host> [port]} to join a hosted game.
  */
 public final class Main {
-    private static final Duration NOPE_WINDOW = Duration.ofSeconds(5);
-    private static final int DEFAULT_PORT = 2048;
-
     public static void main(String[] args) {
         ExecutorService pool = Executors.newCachedThreadPool(task -> {
             Thread thread = new Thread(task);
@@ -59,14 +56,14 @@ public final class Main {
         try {
             if (args.length > 0 && args[0].equals("bots")) {
                 int count = args.length > 1 ? Integer.parseInt(args[1]) : 4;
-                Randomizer random = args.length > 2 ? new JavaRandomizer(Long.parseLong(args[2])) : new JavaRandomizer();
-                runBotsOnly(count, random, pool, out);
+                long seed = args.length > 2 ? Long.parseLong(args[2]) : System.nanoTime();
+                runBotsOnly(count, seed, pool, out);
                 return;
             }
             ConsoleInput in = new ConsoleInput(System.in, out);
             pool.submit(in::readLoop);
             if (args.length > 1 && args[0].equals("client")) {
-                int port = args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_PORT;
+                int port = args.length > 2 ? Integer.parseInt(args[2]) : GameConfig.DEFAULT_PORT;
                 runClient(args[1], port, in, out);
             } else {
                 runFromMenu(new Menu(in, out, new ExpansionLoader()).run(), in, out, pool);
@@ -80,14 +77,18 @@ public final class Main {
         }
     }
 
-    private static void runBotsOnly(int count, Randomizer random, ExecutorService pool, ConsoleOutput out) {
+    private static void runBotsOnly(int count, long seed, ExecutorService pool, ConsoleOutput out) {
+        Randomizer random = new JavaRandomizer(seed);
         GameSetup.Result setup = new GameSetup(new DeckFactory(), random).setUp(new ExpansionLoader().available(),
                 names("Bot ", 1, count));
         Map<Player, PlayerController> controllers = new LinkedHashMap<>();
-        setup.state().players().forEach(p -> controllers.put(p, new BotController(random)));
+        List<Player> seats = setup.state().players();
+        for (int seat = 0; seat < seats.size(); seat++) {
+            controllers.put(seats.get(seat), new BotController(seatRandom(seed, seat)));
+        }
         EventBus bus = new EventBus();
         bus.subscribe(new ConsoleView(out, new TextRenderer(), Optional.empty()));
-        play(setup, controllers, bus, random, NOPE_WINDOW, pool);
+        play(setup, controllers, bus, random, GameConfig.DEFAULT_NOPE_WINDOW, pool);
     }
 
     private static void runClient(String host, int port, ConsoleInput in, ConsoleOutput out) throws IOException {
@@ -98,7 +99,8 @@ public final class Main {
     /** Seat order: the local human (Player 1), then remote players (Player 2, ...), then bots. */
     private static void runFromMenu(GameConfig config, ConsoleInput in, ConsoleOutput out, ExecutorService pool)
             throws IOException {
-        Randomizer random = new JavaRandomizer();
+        long seed = System.nanoTime();
+        Randomizer random = new JavaRandomizer(seed);
         TextRenderer renderer = new TextRenderer();
         int remotes = Math.max(0, config.humans() - 1);
         List<MessageChannel> channels = List.of();
@@ -129,16 +131,16 @@ public final class Main {
             bus.subscribe(new ConsoleView(out, renderer, Optional.empty()));
         }
         for (MessageChannel channel : channels) {
-            Player remote = seats.get(seat++);
+            Player remote = seats.get(seat);
             greet(channel, remote);
-            RemoteController controller = new RemoteController(channel, remote, renderer, new BotController(random),
-                    bus::publish);
+            RemoteController controller = new RemoteController(channel, remote, renderer,
+                    new BotController(seatRandom(seed, seat++)), bus::publish);
             controllers.put(remote, controller);
             bus.subscribe(controller);
             remoteControllers.add(controller);
         }
         while (seat < seats.size()) {
-            controllers.put(seats.get(seat++), new BotController(random));
+            controllers.put(seats.get(seat), new BotController(seatRandom(seed, seat++)));
         }
         play(setup, controllers, bus, random, config.nopeWindow(), pool);
         remoteControllers.forEach(remote -> remote.gameOver("Game over. Thanks for playing!"));
@@ -150,6 +152,14 @@ public final class Main {
         } catch (IOException e) {
             // the RemoteController notices on its first message and hands the seat to a bot
         }
+    }
+
+    /**
+     * Each bot gets its own stream, so a bot's choices don't depend on how Nope workers interleave
+     * on a shared one. Seats count from 1, so no bot reuses the game's own seed.
+     */
+    private static Randomizer seatRandom(long seed, int seat) {
+        return new JavaRandomizer(seed + seat + 1);
     }
 
     private static List<String> names(String prefix, int first, int count) {

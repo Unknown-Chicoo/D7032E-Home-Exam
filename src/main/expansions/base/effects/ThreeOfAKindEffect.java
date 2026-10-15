@@ -41,11 +41,12 @@ public final class ThreeOfAKindEffect implements CardEffect {
                 .ifPresent(card -> ctx.transfer(card, target, play.player()));
     }
 
-    /** Every type still in play (hands and deck), from any expansion, so no hard-coded card list is needed. */
+    /** Every type in the game (hands, deck and discard pile), from any expansion, so no hard-coded card list is needed. */
     private static List<CardType> typesInGame(GameState state) {
         Stream<Card> inHands = state.players().stream().flatMap(p -> p.hand().cards().stream());
         Stream<Card> inDeck = state.deck().peek(state.deck().size()).stream();
-        return Stream.concat(inHands, inDeck)
+        Stream<Card> inDiscard = state.discard().cards().stream();
+        return Stream.of(inHands, inDeck, inDiscard).flatMap(cards -> cards)
                 .map(Card::type)
                 .distinct()
                 .sorted(Comparator.comparing(CardType::name))

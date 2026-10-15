@@ -184,10 +184,12 @@ Apply these where the scaffold differs.
    - Eligible players are alive players holding a Nope, excluding whoever played the last
      card or Nope.
    - If nobody is eligible, return at once.
-   - Ask everyone eligible in parallel via `ExecutorCompletionService`.
-   - The first "yes" wins: that player's Nope goes to the discard pile, publish `PlayNoped`,
-     flip `noped` and run another round.
-   - If everyone answers no, or the window passes, return `noped`.
+   - Ask everyone eligible in parallel, then wait until all have answered or the window
+     passes. A late or failed answer counts as "no".
+   - Of those who said yes, the first in turn order after the actor wins (decision 22): that
+     player's Nope goes to the discard pile, flip `noped`, publish `PlayNoped(by, play, noped)`
+     and run another round.
+   - If nobody said yes, return `noped`.
    - Only the game thread mutates state. Workers only call `wantsToNope` with a `GameView`
      snapshot.
 8. **`Hand`** queries by type only through predicates: `containsMatching(Predicate<CardType>)`
@@ -251,7 +253,8 @@ Apply these where the scaffold differs.
     - New public `PlayerDrew` ("X drew a card") next to the private `CardDrawn`.
     - New private `MoveRejected`: `GameEngine` reports an `InvalidMoveException` to the player,
       who then chooses again.
-    - `CardTransferred` hides which card moved; the two players see it in their hands.
+    - `CardTransferred` hides which card moved; the two players get private events
+      (decision 22).
     - `Hand.removeRandom` was removed: two of a kind picks an index with the `Randomizer` and
       uses `GameContext.transfer`, so the event is published in one place.
     - `DrawResolver` ends the turn after a draw unless the draw effect already did (rule 9).
@@ -280,6 +283,29 @@ Apply these where the scaffold differs.
       second implementation is needed.
     - It imports only `model`, `players`, `events` and `util`, so the `cards` rule holds.
       Effects still never see the engine (Interface Segregation).
+22. **Review fixes (after phase 8):**
+    - **Determinism.** Each `BotController` gets its own `Randomizer`, `JavaRandomizer(seed + seat + 1)`
+      with seats counted from 0, so no bot reuses the game's seed; the game keeps
+      `JavaRandomizer(seed)`. This also applies to a `RemoteController`'s fallback bot. The
+      menu mode picks a seed from `System.nanoTime()`.
+      - Separate streams were not enough on their own. "First yes wins" let thread timing
+        decide between two bots that both Noped, and a cancelled bot skipped its random draw.
+        So a Nope round now waits for every answer (or the deadline) and breaks ties by turn
+        order (decision 7). With this, `bots 5 42` gives the same output on every run.
+      - Trade-off: a human's Nope takes effect only once every other eligible player has
+        answered or the window has passed. Simultaneous Nopes are settled by seat, not by
+        network latency.
+    - **Rule 12.** In `PlayResolver`, a combo (`cards.size() > 1`) can always be Noped; a single
+      card can be Noped if its type `isNopeable()`.
+    - **Card transfers.** `GameContext.transfer` publishes the public `CardTransferred(from, to)`
+      ("<from>'s card went to <to>"; it has no card field, so no listener can leak it), then the
+      private `CardLost` (to `from`) and `CardReceived` (to `to`), which name the card.
+    - **Targeting.** Candidates are other living players who hold at least one card. If there is
+      none, `Targeting.withTarget` throws `InvalidMoveException` in `prepare`, so nothing is
+      discarded.
+    - **Starting cards.** `Expansion.createStartingCards(players)` returns the cards that *one*
+      player gets (`BaseGame`: 1 Defuse). `DeckFactory.startingHand` is called once for each
+      player, so every hand gets its own list.
 
 ## Phases
 

@@ -54,7 +54,7 @@ public final class BaseGame implements Expansion {
     @Override
     public List<Card> createStartingCards(int players) {
         List<Card> cards = new ArrayList<>();
-        add(cards, DEFUSE, players);
+        add(cards, DEFUSE, 1);
         return cards;
     }
 

@@ -38,7 +38,7 @@ public final class PlayResolver {
         ctx.state().discard().addAll(cards);
         ctx.publish(new CardPlayed(prepared));
 
-        boolean nopeable = cards.stream().allMatch(card -> card.type().isNopeable());
+        boolean nopeable = cards.size() > 1 || cards.getFirst().type().isNopeable();   // rule 12: combos always
         if (nopeable && nopeResolver.isNoped(ctx, prepared)) {
             return;
         }
