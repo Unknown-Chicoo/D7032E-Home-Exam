@@ -20,8 +20,17 @@ public final class Menu {
 
     public GameConfig run() {
         out.println("=== Exploding Kittens ===");
+        List<Expansion> available = loader.available();
+        out.println("Expansions found:");
+        available.stream().filter(e -> e.order() == 0).forEach(e -> out.println("  " + e.name() + " (always included)"));
+        List<Expansion> addOns = available.stream().filter(e -> e.order() != 0).toList();
+        if (addOns.isEmpty()) {
+            out.println("No add-on expansions installed.");
+        }
+        addOns.forEach(e -> out.println("  " + e.name()));
+
         List<Expansion> expansions = new ArrayList<>();
-        for (Expansion expansion : loader.available()) {
+        for (Expansion expansion : available) {
             if (expansion.order() == 0 || yes("Add the expansion \"" + expansion.name() + "\"?")) {
                 expansions.add(expansion);
             }

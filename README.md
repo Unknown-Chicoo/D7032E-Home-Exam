@@ -10,6 +10,18 @@ Expansions are found with `ServiceLoader`, which reads
 `resources/META-INF/services/main.core.expansion.Expansion`. The `resources` folder must therefore
 be on the classpath. Without it the game stops at once with "No expansions found".
 
+With the scripts (Linux, macOS, WSL, Git Bash):
+
+```sh
+./build.sh                    # compile into build/prod and copy resources/
+./run.sh                      # build, then start the menu: local or online game
+./run.sh bots 4 42            # build, then a bots-only game: [count] [seed]
+./run.sh client <host> 2048   # build, then join a hosted game
+./run-tests.sh                # compile everything and run all tests
+```
+
+By hand:
+
 ```sh
 javac -d out $(find src -name '*.java')
 java -cp out:resources main.Main                 # menu: local or online game
