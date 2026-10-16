@@ -37,4 +37,33 @@ to the output folder.
 ## Tests
 
 `./run-tests.sh` compiles `src/` and `test/` and runs all JUnit 5 tests. It copies `resources/`
-itself.
+itself. Any arguments are passed on to the JUnit console launcher:
+
+```sh
+./run-tests.sh                                                   # all tests
+./run-tests.sh --details=summary                                 # all tests, counts only
+./run-tests.sh --select-class main.core.engine.NopeResolverTest  # one test class
+./run-tests.sh --select-method 'main.expansions.base.effects.AttackEffectTest#rule11a_attackGivesNextPlayerTwoTurns'
+./run-tests.sh --select-package main.expansions.base             # one package and its subpackages
+```
+
+By hand (after `./run-tests.sh` or the `javac` steps in it have filled `build/`):
+
+```sh
+java -jar lib/junit-platform-console-standalone-1.14.4.jar execute \
+    --class-path build/prod:build/test --select-class main.core.engine.NopeResolverTest
+```
+
+**IntelliJ:** mark `test` as *Test Sources Root* and add
+`lib/junit-platform-console-standalone-1.14.4.jar` as a Test-scope library; then run a class or
+method from the gutter icon.
+
+`test/` mirrors the packages under `src/`, and test names cite the rule they check (e.g.
+`rule11a_attackGivesNextPlayerTwoTurns`). Shared helpers live in `test/main/testing`:
+
+- `ScriptedController`: a `PlayerController` that answers from queues the test fills and records
+  what it was asked;
+- `RecordingListener`: keeps every event, public and private;
+- `Table`: a hand-built base game (players `P1`…`Pn`, chosen hands and deck, seeded
+  `JavaRandomizer(42)`, 50 ms Nope window);
+- `InMemoryChannel`: a `MessageChannel` for `RemoteController` tests, with no sockets.

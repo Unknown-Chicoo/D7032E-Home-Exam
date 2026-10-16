@@ -12,4 +12,9 @@ if [ -n "$TESTS" ]; then
 else
     mkdir -p build/test
 fi
-java -jar $JUNIT execute --class-path build/prod:build/test --scan-class-path --disable-banner "$@"
+# JUnit refuses --scan-class-path together with a selector, so scan only when none is given.
+case "$*" in
+    *--select*) SCAN= ;;
+    *) SCAN=--scan-class-path ;;
+esac
+java -jar $JUNIT execute --class-path build/prod:build/test $SCAN --disable-banner "$@"
