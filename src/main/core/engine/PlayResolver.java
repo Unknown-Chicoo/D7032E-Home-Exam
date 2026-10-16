@@ -7,7 +7,7 @@ import main.core.rules.CardEffect;
 import main.core.rules.CardRegistry;
 import main.core.rules.GameContext;
 import main.core.rules.InvalidMoveException;
-import main.core.events.GameEvent.CardPlayed;
+import main.core.events.CardPlayed;
 import main.core.model.Card;
 import main.core.model.Play;
 import main.core.model.Player;

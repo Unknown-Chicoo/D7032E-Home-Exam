@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import main.core.events.CardPlayed;
 import main.core.events.GameEvent;
 import main.core.model.Card;
 import main.core.model.Player;
@@ -52,7 +53,7 @@ public final class TextRenderer {
     /** Describes the play, whether it is currently Noped, and the whole seconds left (at least 1). */
     public String nopePrompt(NopeOffer offer) {
         String state = offer.currentlyNoped() ? "It is currently Noped. " : "";
-        return new GameEvent.CardPlayed(offer.play()).describe() + ". " + state
+        return new CardPlayed(offer.play()).describe() + ". " + state
                 + "Nope it? You have " + Math.max(1, offer.timeLeft().toSeconds()) + " seconds.";
     }
 

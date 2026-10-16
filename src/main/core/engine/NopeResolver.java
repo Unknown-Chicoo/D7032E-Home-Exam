@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import main.core.rules.GameContext;
-import main.core.events.GameEvent.PlayNoped;
+import main.core.events.PlayNoped;
 import main.core.model.CardType;
 import main.core.model.Play;
 import main.core.model.Player;

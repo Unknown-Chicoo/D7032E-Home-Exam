@@ -142,6 +142,14 @@ Apply these where the scaffold differs.
 1. **`GameEvent`** is a plain (non-sealed) interface.
    - Methods: `String describe()` and `default Optional<Player> privateTo()`.
    - Expansions may define their own event records.
+   - Each event is a top-level record in its own file; `GameEvent` holds only the interface.
+     - `main.core.events`: events published by the engine or `GameContext` (`TurnStarted`,
+       `CardPlayed`, `MoveRejected`, `PlayNoped`, `PlayerDrew`, `CardDrawn`, `CardTransferred`,
+       `CardReceived`, `CardLost`, `GameWon`). Card lists are formatted by the package-private
+       `CardNames`.
+     - `main.expansions.base.events`: events published only by base effects (`KittenDefused`,
+       `PlayerExploded`, `FutureSeen`, `DeckShuffled`). Nothing in `core`, `io` or `network`
+       imports them; viewers show them through `describe()` (decision 13).
 2. **`TurnState`** has only primitive operations; the rules live in the effects.
    - Operations: `current()`, `turnsLeft()`, `turnNumber()`, `endTurn()`,
      `passTo(Player, int)`, `reverse()`, `direction()`, `playerEliminated(Player)`,

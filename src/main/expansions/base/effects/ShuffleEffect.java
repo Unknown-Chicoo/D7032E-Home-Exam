@@ -2,8 +2,8 @@ package main.expansions.base.effects;
 
 import main.core.rules.CardEffect;
 import main.core.rules.GameContext;
-import main.core.events.GameEvent.DeckShuffled;
 import main.core.model.Play;
+import main.expansions.base.events.DeckShuffled;
 
 /** Shuffle: shuffle the deck (rule 11c). */
 public final class ShuffleEffect implements CardEffect {

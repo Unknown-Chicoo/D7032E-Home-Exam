@@ -2,9 +2,9 @@ package main.core.engine;
 
 import main.core.rules.GameContext;
 import main.core.rules.InvalidMoveException;
-import main.core.events.GameEvent.GameWon;
-import main.core.events.GameEvent.MoveRejected;
-import main.core.events.GameEvent.TurnStarted;
+import main.core.events.GameWon;
+import main.core.events.MoveRejected;
+import main.core.events.TurnStarted;
 import main.core.model.GameState;
 import main.core.model.Pass;
 import main.core.model.Play;

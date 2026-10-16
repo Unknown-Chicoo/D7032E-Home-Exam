@@ -2,8 +2,8 @@ package main.expansions.base.effects;
 
 import main.core.rules.CardEffect;
 import main.core.rules.GameContext;
-import main.core.events.GameEvent.FutureSeen;
 import main.core.model.Play;
+import main.expansions.base.events.FutureSeen;
 
 /** See the Future: privately show the player the top three cards (rule 11e). */
 public final class SeeTheFutureEffect implements CardEffect {

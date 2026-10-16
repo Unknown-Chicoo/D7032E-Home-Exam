@@ -7,11 +7,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import main.core.events.CardLost;
+import main.core.events.CardReceived;
+import main.core.events.CardTransferred;
 import main.core.events.EventBus;
 import main.core.events.GameEvent;
-import main.core.events.GameEvent.CardLost;
-import main.core.events.GameEvent.CardReceived;
-import main.core.events.GameEvent.CardTransferred;
 import main.core.model.Card;
 import main.core.model.GameState;
 import main.core.model.Player;

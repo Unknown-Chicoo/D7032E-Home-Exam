@@ -6,11 +6,11 @@ import java.util.Optional;
 
 import main.core.rules.DrawEffect;
 import main.core.rules.GameContext;
-import main.core.events.GameEvent.KittenDefused;
-import main.core.events.GameEvent.PlayerExploded;
 import main.core.model.Card;
 import main.core.model.Deck;
 import main.core.model.Player;
+import main.expansions.base.events.KittenDefused;
+import main.expansions.base.events.PlayerExploded;
 
 /** Drawing an Exploding Kitten: discard a Defuse and put the kitten back anywhere, or explode (rule 10). */
 public final class ExplodeOrDefuseEffect implements DrawEffect {
