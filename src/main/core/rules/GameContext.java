@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import main.core.events.EventBus;
 import main.core.events.GameEvent;
@@ -65,6 +66,36 @@ public final class GameContext {
         TurnState turns = state.turns();
         return new GameView(player, List.copyOf(player.hand().cards()), state.deck().size(),
                 Collections.unmodifiableMap(handSizes), turns.current() == player ? turns.turnsLeft() : 0);
+    }
+
+    /**
+     * Asks {@code chooser} to pick a target (rules 11b, 11f, 11g). The effect decides who is eligible;
+     * the context does the asking and checks the answer.
+     *
+     * @param eligible the effect's own condition, e.g. "holds a card"; only other living players are tested
+     * @throws InvalidMoveException if nobody is eligible, or the answer is not one of the candidates;
+     *         the player chooses again
+     */
+    public Player chooseTarget(Player chooser, Predicate<Player> eligible) throws InvalidMoveException {
+        List<Player> candidates = state.alivePlayers().stream()
+                .filter(p -> isEligibleTarget(chooser, p, eligible))
+                .toList();
+        if (candidates.isEmpty()) {
+            throw new InvalidMoveException("No valid target");
+        }
+        Player target = controllerOf(chooser).chooseTarget(viewFor(chooser), candidates);
+        if (!candidates.contains(target)) {
+            throw new InvalidMoveException("Choose one of the offered targets");
+        }
+        return target;
+    }
+
+    /**
+     * Whether {@code target} is another living player matching {@code eligible}. Lets an effect keep a
+     * target already set on a play only if {@link #chooseTarget} would have offered it.
+     */
+    public boolean isEligibleTarget(Player chooser, Player target, Predicate<Player> eligible) {
+        return target != chooser && target.isAlive() && eligible.test(target);
     }
 
     /**

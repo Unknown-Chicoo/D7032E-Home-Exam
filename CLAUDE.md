@@ -22,8 +22,8 @@
   - `core.model` imports only `util`.
   - `core.events` imports `model`.
   - `core.players` imports `model` and `util`.
-  - `core.cards` imports `model`, `players`, `events` and `util`.
-  - `core.expansion` imports `cards` and `model`.
+  - `core.rules` imports `model`, `players`, `events` and `util`.
+  - `core.expansion` imports `rules` and `model`.
   - `core.engine` may import all of `core`.
   - `expansions.*` may import `core.*` except `engine`.
   - `io` imports only core abstractions.
@@ -172,7 +172,7 @@ Apply these where the scaffold differs.
      the same type, of any type, not only cats (rule 11f/g). It registers
      `registerCombo(sameType(2), new TwoOfAKindEffect())` and
      `registerCombo(sameType(3), new ThreeOfAKindEffect())`.
-4. **`InvalidMoveException`** lives in `core.cards` and has a message constructor.
+4. **`InvalidMoveException`** lives in `core.rules` and has a message constructor.
 5. **`PlayerController`** gets a general method for questions from expansions:
    `int choose(GameView, Question)`, with `record Question(String prompt, List<String> options)`
    in `core.players`.
@@ -243,8 +243,8 @@ Apply these where the scaffold differs.
       before deciding to Nope, as in the original.
     - `prepare` also checks the completed play and throws `InvalidMoveException` if it is
       illegal. There is no separate `validate`: its only caller ran it right after `prepare`, so
-      the two were merged (primitiveness). The three effects share `Targeting.withTarget` and
-      `Targeting.requireTarget`.
+      the two were merged (primitiveness). The three effects ask through
+      `GameContext.chooseTarget` (decision 23).
     - `chooseAction` returns only the cards. `PlayResolver` runs: lone-Nope check → `effectFor`
       → cards in hand? → `prepare` → discard + `CardPlayed` → Nope window → `apply`.
 
@@ -275,13 +275,13 @@ Apply these where the scaffold differs.
     - Seats are named "Player 1" (local human), "Player 2", … (remote) and "Bot 1", ….
       `Main` has three modes: menu, `bots [count] [seed]` and `client <host> [port]`.
 21. **`GameContext` is one concrete class.** The `GameContext` interface and `engine.DefaultGameContext`
-    were merged into `public final class GameContext` in `core.cards`.
+    were merged into `public final class GameContext` in `core.rules`.
     - Same constructor `(GameState, Map<Player, PlayerController>, EventBus, Randomizer)` and
       methods; `Main` creates it.
     - Reason: primitiveness ("no interface with one implementation and no planned second one").
       Tests can build a real `GameContext` from a `GameState` and fake controllers, so no
       second implementation is needed.
-    - It imports only `model`, `players`, `events` and `util`, so the `cards` rule holds.
+    - It imports only `model`, `players`, `events` and `util`, so the `rules` rule holds.
       Effects still never see the engine (Interface Segregation).
 22. **Review fixes (after phase 8):**
     - **Determinism.** Each `BotController` gets its own `Randomizer`, `JavaRandomizer(seed + seat + 1)`
@@ -301,11 +301,25 @@ Apply these where the scaffold differs.
       ("<from>'s card went to <to>"; it has no card field, so no listener can leak it), then the
       private `CardLost` (to `from`) and `CardReceived` (to `to`), which name the card.
     - **Targeting.** Candidates are other living players who hold at least one card. If there is
-      none, `Targeting.withTarget` throws `InvalidMoveException` in `prepare`, so nothing is
-      discarded.
+      none, `GameContext.chooseTarget` throws `InvalidMoveException` in `prepare`, so nothing is
+      discarded (decision 23).
     - **Starting cards.** `Expansion.createStartingHand(players)` returns the cards that *one*
       player gets (`BaseGame`: 1 Defuse). `DeckFactory.startingHand` is called once for each
       player, so every hand gets its own list.
+23. **Generic targeting in `core.rules`.** The package-private `expansions.base.effects.Targeting`
+    was replaced by two methods on `GameContext`:
+    - `Player chooseTarget(Player chooser, Predicate<Player> eligible) throws InvalidMoveException`:
+      candidates are other living players matching `eligible`; with none, it throws
+      `InvalidMoveException("No valid target")`. It asks `controllerOf(chooser).chooseTarget` and
+      throws if the answer is not a candidate.
+    - `boolean isEligibleTarget(Player chooser, Player target, Predicate<Player> eligible)`: the same
+      test for one player. `chooseTarget` uses it, and effects use it to keep a target already on
+      the play only if it is eligible. The "other living player" rule thus stays in one place.
+    - Favor and two/three of a kind pass `p -> p.hand().size() > 0`. The effect decides who is
+      eligible; the context does the asking.
+    - Reason: other expansions target players under other conditions (e.g. a targeted attack may
+      pick a player with an empty hand), so the general part (ask, check the answer) moved to core.
+      Only the eligibility condition is specific to an effect.
 
 ## Phases
 
@@ -313,7 +327,7 @@ Each phase ends with: it compiles, a check against "Design principles", and a su
 phase 6 on, the bots-only game must also run to a winner.
 
 1. **`util` + `model`:** `Hand`, `Deck`, `DiscardPile`, `Player`, `TurnState`, `GameState`.
-2. **`events` + `players` (records) + `cards`:** includes `CardRegistry`.
+2. **`events` + `players` (records) + `rules`:** includes `CardRegistry`.
 3. **`expansion` + `BaseCardType`/`BaseGame` + `GameSetup`.**
 4. **Base effects + `DrawResolver` + `PlayResolver`** (Nope stubbed to "never noped").
 5. **`NopeResolver`.**
