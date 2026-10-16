@@ -54,9 +54,12 @@ java -jar lib/junit-platform-console-standalone-1.14.4.jar execute \
     --class-path build/prod:build/test --select-class main.core.engine.NopeResolverTest
 ```
 
-**IntelliJ:** mark `test` as *Test Sources Root* and add
-`lib/junit-platform-console-standalone-1.14.4.jar` as a Test-scope library; then run a class or
-method from the gutter icon.
+**IntelliJ:** the project is preconfigured (`D7032E-Home-Exam.iml`, `.idea/runConfigurations/`).
+Pick a configuration in the run widget at the top right: **Play** (menu), **Bots game**
+(`bots 5 42`) or **All tests**. To see coverage, choose *All tests* and click the ⋮ menu next to the
+play button → *Run with Coverage*; it measures `main.*` and leaves out the test helpers in
+`main.testing`. A single class or method runs from its gutter icon, which also offers
+*Run with Coverage*.
 
 `test/` mirrors the packages under `src/`, and test names cite the rule they check (e.g.
 `rule11a_attackGivesNextPlayerTwoTurns`). Shared helpers live in `test/main/testing`:
