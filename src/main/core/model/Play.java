@@ -14,4 +14,14 @@ import java.util.Optional;
  */
 public record Play(Player player, List<Card> cards, Optional<Player> target, Optional<CardType> namedType)
         implements TurnAction {
+
+    /** A copy of this play aimed at {@code target}. */
+    public Play withTarget(Player target) {
+        return new Play(player, cards, Optional.of(target), namedType);
+    }
+
+    /** A copy of this play that names {@code type} (rule 11g). */
+    public Play withNamedType(CardType type) {
+        return new Play(player, cards, target, Optional.of(type));
+    }
 }

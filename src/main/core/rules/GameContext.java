@@ -78,7 +78,7 @@ public final class GameContext {
      */
     public Player chooseTarget(Player chooser, Predicate<Player> eligible) throws InvalidMoveException {
         List<Player> candidates = state.alivePlayers().stream()
-                .filter(p -> isEligibleTarget(chooser, p, eligible))
+                .filter(p -> p != chooser && eligible.test(p))
                 .toList();
         if (candidates.isEmpty()) {
             throw new InvalidMoveException("No valid target");
@@ -88,14 +88,6 @@ public final class GameContext {
             throw new InvalidMoveException("Choose one of the offered targets");
         }
         return target;
-    }
-
-    /**
-     * Whether {@code target} is another living player matching {@code eligible}. Lets an effect keep a
-     * target already set on a play only if {@link #chooseTarget} would have offered it.
-     */
-    public boolean isEligibleTarget(Player chooser, Player target, Predicate<Player> eligible) {
-        return target != chooser && target.isAlive() && eligible.test(target);
     }
 
     /**

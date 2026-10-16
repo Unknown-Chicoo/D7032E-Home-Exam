@@ -307,16 +307,16 @@ Apply these where the scaffold differs.
       player gets (`BaseGame`: 1 Defuse). `DeckFactory.startingHand` is called once for each
       player, so every hand gets its own list.
 23. **Generic targeting in `core.rules`.** The package-private `expansions.base.effects.Targeting`
-    was replaced by two methods on `GameContext`:
+    was replaced by one method on `GameContext`:
     - `Player chooseTarget(Player chooser, Predicate<Player> eligible) throws InvalidMoveException`:
       candidates are other living players matching `eligible`; with none, it throws
       `InvalidMoveException("No valid target")`. It asks `controllerOf(chooser).chooseTarget` and
       throws if the answer is not a candidate.
-    - `boolean isEligibleTarget(Player chooser, Player target, Predicate<Player> eligible)`: the same
-      test for one player. `chooseTarget` uses it, and effects use it to keep a target already on
-      the play only if it is eligible. The "other living player" rule thus stays in one place.
-    - Favor and two/three of a kind pass `p -> p.hand().size() > 0`. The effect decides who is
-      eligible; the context does the asking.
+    - Favor and two/three of a kind always call `chooseTarget` with `p -> p.hand().size() > 0`.
+      The effect decides who is eligible; the context does the asking. They don't look at a target
+      or named type already on the play: controllers never set them (decision 19).
+    - `Play.withTarget(Player)` and `Play.withNamedType(CardType)` return completed copies, so
+      effects don't rebuild the record field by field.
     - Reason: other expansions target players under other conditions (e.g. a targeted attack may
       pick a player with an empty hand), so the general part (ask, check the answer) moved to core.
       Only the eligibility condition is specific to an effect.

@@ -2,8 +2,6 @@ package main.expansions.base.effects;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import main.core.rules.CardEffect;
@@ -17,26 +15,19 @@ import main.core.model.Player;
 
 /** Three of a kind: name a card type and take one from the target if they have it (rule 11g). */
 public final class ThreeOfAKindEffect implements CardEffect {
-    private static final Predicate<Player> HAS_CARDS = p -> p.hand().size() > 0;
 
     /**
      * Asks for the target, then for a card type among every type in the game, before the Nope window.
-     * This effect decides who is eligible (a player with cards); the context does the asking. A target
-     * already on the play is kept only if eligible.
+     * This effect decides who is eligible (a player with cards); the context does the asking.
      */
     @Override
     public Play prepare(GameContext ctx, Play play) throws InvalidMoveException {
-        Optional<Player> preset = play.target().filter(t -> ctx.isEligibleTarget(play.player(), t, HAS_CARDS));
-        Player target = preset.isPresent() ? preset.get() : ctx.chooseTarget(play.player(), HAS_CARDS);
-        Play targeted = new Play(play.player(), play.cards(), Optional.of(target), play.namedType());
-        if (targeted.namedType().isPresent()) {
-            return targeted;
-        }
+        Player target = ctx.chooseTarget(play.player(), p -> p.hand().size() > 0);
         CardType named = ctx.controllerOf(play.player()).chooseCardTypeToName(ctx.viewFor(play.player()), typesInGame(ctx.state()));
         if (named == null) {
             throw new InvalidMoveException("Name the card type you want");
         }
-        return new Play(targeted.player(), targeted.cards(), targeted.target(), Optional.of(named));
+        return play.withTarget(target).withNamedType(named);
     }
 
     /** Moves one card of the named type if the target holds one; otherwise nothing happens. */
