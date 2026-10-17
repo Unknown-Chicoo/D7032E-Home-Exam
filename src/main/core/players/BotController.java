@@ -1,5 +1,6 @@
 package main.core.players;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,6 +22,7 @@ import main.core.util.Randomizer;
  * cards (Req. 16).
  */
 public final class BotController implements PlayerController {
+    private static final int TRIPLE_CHANCE = 50;
     private static final int PAIR_CHANCE = 35;
     private static final int ACTION_CHANCE = 40;
     private static final int NOPE_CHANCE = 15;
@@ -37,13 +39,16 @@ public final class BotController implements PlayerController {
         this.random = random;
     }
 
-    /** Sometimes plays a pair of cats or a random action card; otherwise draws. */
+    /** Sometimes plays three or two of a kind of cats, or a random action card; otherwise draws. */
     @Override
     public TurnAction chooseAction(GameView view) {
-        Optional<CardType> pairType = catPair(view.hand());
+        Optional<CardType> tripleType = catGroup(view.hand(), 3);
+        if (tripleType.isPresent() && chance(TRIPLE_CHANCE)) {
+            return play(view, Collections.nCopies(3, new Card(tripleType.get())));
+        }
+        Optional<CardType> pairType = catGroup(view.hand(), 2);
         if (pairType.isPresent() && chance(PAIR_CHANCE)) {
-            Card cat = new Card(pairType.get());
-            return play(view, List.of(cat, cat));
+            return play(view, Collections.nCopies(2, new Card(pairType.get())));
         }
         List<Card> actions = view.hand().stream().filter(BotController::isAction).toList();
         if (!actions.isEmpty() && chance(ACTION_CHANCE)) {
@@ -105,12 +110,13 @@ public final class BotController implements PlayerController {
         return new Play(view.self(), cards, Optional.empty(), Optional.empty());
     }
 
-    private static Optional<CardType> catPair(List<Card> hand) {
+    /** The first cat type held at least {@code size} times. */
+    private static Optional<CardType> catGroup(List<Card> hand, int size) {
         Map<CardType, Long> cats = hand.stream()
                 .map(Card::type)
                 .filter(CardType::isCat)
                 .collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
-        return cats.entrySet().stream().filter(e -> e.getValue() >= 2).map(Map.Entry::getKey).findFirst();
+        return cats.entrySet().stream().filter(e -> e.getValue() >= size).map(Map.Entry::getKey).findFirst();
     }
 
     /** A playable action card: not a cat, not a Nope, and Nopeable (which excludes Defuse). */
