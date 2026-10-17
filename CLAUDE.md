@@ -153,15 +153,18 @@ Apply these where the scaffold differs.
 2. **`TurnState`** has only primitive operations; the rules live in the effects.
    - Operations: `current()`, `turnsLeft()`, `turnNumber()`, `endTurn()`,
      `passTo(Player, int)`, `reverse()`, `direction()`, `playerEliminated(Player)`,
-     `nextAlive(Player)`.
+     `nextAlive(Player)`, `turnsGiven()`.
+   - `turnsGiven()` is how many turns the current player was given: `passTo(next, n)` sets it to
+     n, and `endTurn` sets it to 1 when the turn moves on. It is a fact about the turn, not a rule.
    - `turnNumber` increments whenever a turn ends. `GameEngine` loops
      `while (turns.turnNumber() == turnAtStart && player.isAlive())`.
    - `AttackEffect` computes the stacking itself:
      - normal attack: `passTo(next, 2)`;
-     - if the attacker was itself under attack with `turnsLeft > 1`:
-       `passTo(next, turnsLeft + 2)`.
-     - This follows rule 11a's example (2 → 4 → 6). The earlier formula `turnsLeft − 1 + 2`
-       gave 2 → 3 → 4 and was dropped.
+     - if the attacker was itself attacked (`turnsGiven() > 1`): `passTo(next, turnsLeft + 2)`.
+     - This follows rule 11a's wording ("remaining turns + 2") and its example (2 → 4 → 6). An
+       attacked player who used one of 2 turns (Skip or draw) and then attacks gives 1 + 2 = 3.
+       The earlier test `turnsLeft > 1` gave 2 there, because with 1 turn left an attacked player
+       looked like an unattacked one. The formula `turnsLeft − 1 + 2` gave 2 → 3 → 4 and was dropped.
 3. **Combos.** There is no `ComboRule` interface and no `SameTypeCombo` class.
    - `CardRegistry.registerCombo(Predicate<List<Card>> matches, CardEffect effect)` stores each
      combo as a private record in a `List`, checked in registration order.

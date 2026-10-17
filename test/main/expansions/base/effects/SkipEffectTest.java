@@ -34,4 +34,16 @@ class SkipEffectTest {
         t.resolve(t.play(2, SKIP));
         assertSame(t.p(3), turns.current());
     }
+
+    /** turnsGiven resets when the turn passes on, so the next player's Attack gives only 2. */
+    @Test
+    void rule11d_skipUnderAttackThenNextPlayerHasOneTurn() {
+        SkipEffect skip = new SkipEffect();
+        turns.passTo(t.p(2), 2);
+        skip.apply(t.ctx, t.play(2, SKIP));
+        skip.apply(t.ctx, t.play(2, SKIP));
+        assertSame(t.p(3), turns.current());
+        assertEquals(1, turns.turnsLeft());
+        assertEquals(1, turns.turnsGiven());
+    }
 }

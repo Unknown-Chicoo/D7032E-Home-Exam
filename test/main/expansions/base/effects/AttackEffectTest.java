@@ -38,15 +38,39 @@ class AttackEffectTest {
         assertEquals(6, turns.turnsLeft());
     }
 
-    /** Decision 2: stacking applies only while more than one turn is owed. */
+    private final AttackEffect attack = new AttackEffect();
+
     @Test
-    void rule11a_attackOnTheLastOwedTurnGivesTwo() throws InvalidMoveException {
-        t.give(2, ATTACK);
+    void rule11a_notAttacked_givesTwo() {
+        attack.apply(t.ctx, t.play(1, ATTACK));
+        assertSame(t.p(2), turns.current());
+        assertEquals(2, turns.turnsLeft());
+    }
+
+    @Test
+    void rule11a_attackedFirstTurn_givesFour() {
+        turns.passTo(t.p(2), 2);
+        attack.apply(t.ctx, t.play(2, ATTACK));
+        assertSame(t.p(3), turns.current());
+        assertEquals(4, turns.turnsLeft());
+    }
+
+    @Test
+    void rule11a_attackedWithFourOwed_givesSix() {
+        turns.passTo(t.p(2), 4);
+        attack.apply(t.ctx, t.play(2, ATTACK));
+        assertSame(t.p(3), turns.current());
+        assertEquals(6, turns.turnsLeft());
+    }
+
+    /** Decision 2: still attacked with one turn left, so the remaining turn + 2 passes on. */
+    @Test
+    void rule11a_attackedAfterUsingOneTurn_givesThree() {
         turns.passTo(t.p(2), 2);
         turns.endTurn();
-        t.resolve(t.play(2, ATTACK));
+        attack.apply(t.ctx, t.play(2, ATTACK));
         assertSame(t.p(3), turns.current());
-        assertEquals(2, turns.turnsLeft());
+        assertEquals(3, turns.turnsLeft());
     }
 
     @Test

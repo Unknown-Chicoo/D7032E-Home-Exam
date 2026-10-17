@@ -2,11 +2,12 @@ package main.core.model;
 
 import java.util.List;
 
-/** Whose turn it is, how many turns they still owe, and the direction of play. */
+/** Whose turn it is, how many turns they were given and still owe, and the direction of play. */
 public final class TurnState {
     private final List<Player> players;
     private int currentIndex;
     private int turnsLeft;
+    private int turnsGiven;
     private int direction;
     private int turnNumber;
 
@@ -20,6 +21,7 @@ public final class TurnState {
         this.players = List.copyOf(players);
         this.currentIndex = startIndex;
         this.turnsLeft = 1;
+        this.turnsGiven = 1;
         this.direction = 1;
         this.turnNumber = 0;
     }
@@ -34,6 +36,14 @@ public final class TurnState {
         return turnsLeft;
     }
 
+    /**
+     * How many turns the current player was given when the turn passed to them: 1 normally, more
+     * after {@link #passTo}. A fact about the turn, not a rule; effects such as Attack interpret it.
+     */
+    public int turnsGiven() {
+        return turnsGiven;
+    }
+
     /** Increments whenever a turn ends; compare it before and after an action to tell whether the turn ended. */
     public int turnNumber() {
         return turnNumber;
@@ -46,6 +56,7 @@ public final class TurnState {
         if (turnsLeft <= 0) {
             currentIndex = players.indexOf(nextAlive(current()));
             turnsLeft = 1;
+            turnsGiven = 1;
         }
     }
 
@@ -59,6 +70,7 @@ public final class TurnState {
         turnNumber++;
         currentIndex = players.indexOf(next);
         turnsLeft = turns;
+        turnsGiven = turns;
     }
 
     /** Flips the order of play; {@link #nextAlive} and {@link #endTurn} follow the new direction. */
